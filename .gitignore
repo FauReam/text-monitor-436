@@ -1,0 +1,7 @@
+results/
+figures/
+data/
+__pycache__/
+*.npy
+*.joblib
+.DS_Store
