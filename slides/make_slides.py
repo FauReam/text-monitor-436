@@ -120,13 +120,6 @@ def build_midterm():
         (0, "预登记已锁定 3 条预测，证伪也照样报告"),
     ], size=19)
 
-    s = add_slide(prs, "Current progress")
-    add_figure_or_placeholder(s, "e1_learning_curve.png", [
-        "学习曲线（LR，10 种子均值 ± 95% 区间，标签修复后的 v2 数据：91 万步、错例 27.9%、按题目分组）",
-        "结论句（差值语言）：n=20 时所有特征 ≈ 0.51 近随机；n ≥ 50 起 Δ 转负并单调走负，full 端 −0.048 ~ −0.064",
-        "——同分布端预训练未提升，这是如实报告的边界；泛化/扰动轴见 E3/E4（偏移下 bge-large Δ=+0.020 显著正）",
-    ])
-
     s = add_slide(prs, "Challenges")
     add_bullets(s, [
         (0, "首轮数据构造只取 chosen completion → 正类占 99.8%，指标退化"),
@@ -136,6 +129,13 @@ def build_midterm():
         (0, "预登记若被证伪（如 gap 峰值不在小样本端）→ 如实报告为边界结论"),
         (0, "拒答阈值（监视器何时说“不知道”）怎么定 → 风险-覆盖率曲线（可选 E5）"),
     ], size=19)
+
+    s = add_slide(prs, "Current progress")
+    add_figure_or_placeholder(s, "e1_learning_curve.png", [
+        "学习曲线（LR，10 种子均值 ± 95% 区间，标签修复后的 v2 数据：91 万步、错例 27.9%、按题目分组）",
+        "结论句（差值语言）：n=20 时所有特征 ≈ 0.51 近随机；n ≥ 50 起 Δ 转负并单调走负，full 端 −0.048 ~ −0.064",
+        "——同分布端预训练未提升，这是如实报告的边界；泛化/扰动轴见 E3/E4（偏移下 bge-large Δ=+0.020 显著正）",
+    ])
 
     s = add_slide(prs, "Plans")
     add_bullets(s, [
