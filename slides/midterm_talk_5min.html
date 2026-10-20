@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Midterm Talk — Cheap Text Monitors × Pretrained Representations (5:00)</title>
+<style>
+  :root{
+    --bg:#0e1116; --fg:#e8eaf0; --dim:#9aa3b2; --accent:#4cc2ff;
+    --good:#43d17c; --bad:#ff6b6b; --warn:#ffd166; --card:#171c24;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  html,body{height:100%; background:var(--bg); color:var(--fg);
+    font-family:-apple-system,"SF Pro Display","Helvetica Neue",Arial,sans-serif;}
+  .deck{height:100vh; width:100vw; position:relative; overflow:hidden;}
+  section.slide{position:absolute; inset:0; display:none; flex-direction:column;
+    justify-content:center; padding:5vh 7vw 8vh;}
+  section.slide.active{display:flex;}
+  h1{font-size:3.0vw; line-height:1.15; letter-spacing:-0.01em;}
+  h2{font-size:2.0vw; color:var(--accent); margin-bottom:2.5vh; font-weight:700;}
+  h2 .tag{color:var(--dim); font-size:1.0vw; font-weight:500; margin-left:1vw;}
+  ul{list-style:none;}
+  li{font-size:1.35vw; line-height:1.5; margin:0.9vh 0; padding-left:1.6em; position:relative;}
+  li::before{content:"▸"; color:var(--accent); position:absolute; left:0.3em;}
+  li.sub{font-size:1.1vw; color:var(--dim); padding-left:3.2em;}
+  li.sub::before{content:"–"; left:2.2em; color:var(--dim);}
+  li.check::before{content:"✓"; color:var(--good); font-weight:700;}
+  b,strong{color:#fff;}
+  .pos{color:var(--good); font-weight:700;}
+  .neg{color:var(--bad); font-weight:700;}
+  .warn{color:var(--warn); font-weight:700;}
+  .mono{font-family:"SF Mono",Menlo,monospace; font-size:0.92em;}
+  .lead{font-size:1.6vw; color:var(--dim); margin-top:2vh; line-height:1.5;}
+  .figrow{display:flex; gap:2vw; align-items:center; margin:2vh 0;}
+  .figrow img{background:#fff; border-radius:8px; padding:8px;}
+  .figrow .cap{font-size:0.95vw; color:var(--dim); text-align:center; margin-top:0.6vh;}
+  .figcol{flex:1; display:flex; flex-direction:column; align-items:center;}
+  img.main{max-width:100%; max-height:44vh; object-fit:contain;}
+  .cols{display:flex; gap:3vw;}
+  .col{flex:1; background:var(--card); border-radius:12px; padding:2.2vh 1.6vw;}
+  .col h3{font-size:1.25vw; color:var(--accent); margin-bottom:1.2vh;}
+  .col li{font-size:1.12vw;}
+  .kicker{font-size:1.0vw; text-transform:uppercase; letter-spacing:0.15em;
+    color:var(--dim); margin-bottom:1.5vh;}
+  .takeaway{margin-top:2.5vh; padding:1.8vh 1.6vw; background:var(--card);
+    border-left:4px solid var(--accent); border-radius:8px;
+    font-size:1.5vw; line-height:1.45;}
+  table.num{border-collapse:collapse; margin-top:1.5vh; font-size:1.05vw;}
+  table.num th,table.num td{border:1px solid #2a3240; padding:0.55vh 0.9vw; text-align:right;}
+  table.num th{color:var(--accent); text-align:right;}
+  table.num td:first-child,table.num th:first-child{text-align:left;}
+  /* chrome */
+  #bar{position:fixed; left:0; bottom:0; height:5px; background:var(--accent); width:0%; z-index:30;}
+  #hud{position:fixed; right:1.2vw; bottom:1.2vh; z-index:30; color:var(--dim);
+    font-size:0.85vw; font-family:"SF Mono",Menlo,monospace; text-align:right;}
+  #hud .seg{color:var(--accent);}
+  section.slide aside.notes{display:none;}
+  #notes{position:fixed; left:0; right:0; bottom:0; top:auto; max-height:38vh; overflow:auto;
+    background:#0a0d12; border-top:1px solid #2a3240; padding:1.6vh 7vw; display:none; z-index:25;}
+  #notes.on{display:block;}
+  #notes h4{color:var(--warn); font-size:1.0vw; margin-bottom:0.8vh;}
+  #notes p{font-size:1.05vw; color:#c8cfda; line-height:1.55; margin:0.5vh 0;}
+  #notes .zh{color:#8fa3bf;}
+  #notes .t{color:var(--accent); font-family:Menlo,monospace;}
+  body.withnotes section.slide{padding-bottom:34vh; justify-content:flex-start; padding-top:6vh;}
+  .help{position:fixed; left:1.2vw; bottom:1.2vh; color:#3a4354; font-size:0.8vw; z-index:30;}
+</style>
+</head>
+<body>
+<div class="deck" id="deck">
+
+<!-- ============ S1 · TITLE · 0:00–0:15 ============ -->
+<section class="slide" data-seg="0:15">
+  <div class="kicker">CSI 436/536 · Project P · Midterm · Group 8</div>
+  <h1>Cheap Text Monitors × Pretrained Representations:<br>a Δ(θ) measurement report</h1>
+  <p class="lead">We replaced the yes/no question — <i>“do pretrained representations help?”</i> —
+    with a measurement question: <b>where</b> is the value, and where is it <b>not</b>?</p>
+  <p class="lead" style="font-size:1.1vw">Jiayu Liao · Zeyu Pan · Yuhan Sun</p>
+  <aside class="notes">
+    <h4>0:00–0:15 · 开场（15 秒，别超时）</h4>
+    <p class="zh">一句话钩子，说完直接翻页。不要介绍组员（名字在屏上）。</p>
+    <p>“Everyone will tell you today whether pretrained features helped their task. We built a cheap text monitor that reads math reasoning steps and judges right from wrong — and instead of a yes or no, we measured <b>where</b> the value of pretrained features actually lives. First, sixty seconds of checklist — then the number that surprised us.”</p>
+  </aside>
+</section>
+
+<!-- ============ S2 · CONTENT SPRINT · 0:15–0:45 ============ -->
+<section class="slide" data-seg="0:30">
+  <h2>The 60-second sprint — everything required, on purpose <span class="tag">1 / 2</span></h2>
+  <ul>
+    <li><b>Background.</b> Verifying LLM reasoning step-by-step costs GPT-level calls or human labels — a <b>cheap text-only monitor</b> decides: is this step correct?</li>
+    <li><b>Problem setup.</b> <span class="mono">Δ(θ) = AUROC(pretrained) − AUROC(TF-IDF)</span> over regimes θ = (train size n, distribution shift, perturbation). <b>The only variable is where features come from.</b></li>
+    <li><b>Data.</b> PRM800K (OpenAI, MIT license): <b>911,867</b> human-labeled steps, <b>27.9%</b> incorrect; split <b>grouped by problem</b> — 632,422 train / 190,573 test.</li>
+    <li><b>Methods.</b> Frozen MiniLM / bge-base / bge-large as feature extractors only; downstream = in-class <b>logistic regression &amp; linear SVM</b>; baseline = word+char TF-IDF.</li>
+    <li><b>Metrics.</b> Balanced accuracy / AUROC (never raw accuracy); 10 stratified seeds; grouped CV inside train; <b>test touched once</b>.</li>
+  </ul>
+  <aside class="notes">
+    <h4>0:15–0:45 · 内容冲刺（30 秒，匀速，不展开）</h4>
+    <p class="zh">这页是"交付要求清单"：背景、问题设定、数据、方法、指标。每条一句，读完就走。语速可以快但别含糊，数字要念准（911,867 / 27.9% / grouped by problem）。</p>
+    <p>“Background: step-level verification is expensive, so we want a cheap monitor. Setup: we measure delta — pretrained minus TF-IDF — across three regimes; nothing else moves. Data: PRM800K, nine hundred eleven thousand human-labeled steps, twenty-eight percent wrong, split by problem so no solution leaks across sets. Methods: frozen embeddings plus the classifiers from class, against TF-IDF. Metrics: balanced, ten seeds, test once.”</p>
+  </aside>
+</section>
+
+<!-- ============ S3 · SCORECARD · 0:45–1:15 ============ -->
+<section class="slide" data-seg="0:30">
+  <h2>The 60-second sprint — the scorecard <span class="tag">2 / 2</span></h2>
+  <ul>
+    <li class="check"><b>Soundness</b> — leakage-free grouped split; balanced metrics; 10-seed CIs; hyperparameters by grouped CV only.</li>
+    <li class="check"><b>Organization</b> — this checklist first; then one story, told in gaps, not levels.</li>
+    <li class="check"><b>Clarity</b> — one figure per claim; every conclusion is a Δ with an interval, never a bare number.</li>
+    <li class="check"><b>Current progress</b> — E1–E4 complete on clean v2 data: in-domain curve, transfer test, robustness test.</li>
+    <li class="check"><b>Challenges</b> — a self-inflicted label bug, caught and fully re-run; a negative headline Δ, <b>localized, not hidden</b>.</li>
+  </ul>
+  <div class="takeaway">Checklist done. Now the part most talks skip: <b>our headline number looks bad — and it is the most honest result you will see today.</b></div>
+  <aside class="notes">
+    <h4>0:45–1:15 · 得分点清单（30 秒）→ 转折</h4>
+    <p class="zh">五个得分点逐条打勾，每条 4–5 秒。最后 takeaway 放慢、加重——这是全场唯一一次"推销"，说完停顿一拍再翻页。</p>
+    <p>“Soundness: grouped split, balanced metrics, ten seeds, CV inside train only. Organization: checklist first, one story after. Clarity: gaps with intervals, no bare numbers. Progress: four experiments done on clean data. Challenges: we shipped one bug, caught it, re-ran everything — and our headline delta is negative, which we localize instead of hiding. <b>That negative number is the rest of this talk.</b>”</p>
+  </aside>
+</section>
+
+<!-- ============ S4 · THE UGLY CURVE · 1:15–2:30 ============ -->
+<section class="slide" data-seg="1:15">
+  <h2>The result that “doesn’t look good” — Δ(n) in-domain</h2>
+  <div class="figrow">
+    <div class="figcol">
+      <img class="main" src="../figures/e1_gap.png" alt="Δ AUROC vs training set size">
+      <div class="cap">Δ AUROC (embedding − TF-IDF), full curve · 10 seeds, 95% band</div>
+    </div>
+    <div class="figcol">
+      <img class="main" src="../figures/e1_gap_small_n.png" alt="paired Δ at small n">
+      <div class="cap">paired Δ at n = 20…500, per-seed</div>
+    </div>
+  </div>
+  <ul>
+    <li>Textbook expectation: pretrained features help <b>most when n is small</b> (sample efficiency).</li>
+    <li>Measured: n = 20 → everything ≈ <b>0.51, near random</b> — nothing to compare. n ≥ 50 → Δ turns <span class="neg">negative</span> and stays monotone; 10/10 seeds same sign.</li>
+    <li>Full-data end: <span class="neg mono">Δ = −0.048 … −0.064</span>, 95% CI excludes 0 — TF-IDF wins, significantly.</li>
+  </ul>
+  <aside class="notes">
+    <h4>1:15–2:30 · 核心图（75 秒，全场最慢的一页）</h4>
+    <p class="zh">左图讲整体、右图讲小样本。先讲"教科书预期"，再讲"测到什么"，最后报数字。手要指图。"Read the gap, not the levels."</p>
+    <p>“Here is the honest curve. The textbook says pretrained features should shine at small n. At n equals twenty, everything is at chance — zero point five one — so there is no signal to harvest. From fifty on, the gap goes negative and never comes back; at full data, TF-IDF beats every embedding by five to six AUROC points, interval away from zero, ten seeds out of ten. <b>This is not a failed experiment — it localizes where pretrained features do NOT pay.</b>”</p>
+  </aside>
+</section>
+
+<!-- ============ S5 · AUTOPSY + HANDLING · 2:30–3:20 ============ -->
+<section class="slide" data-seg="0:50">
+  <h2>Autopsy: why the baseline wins — and why we trust it</h2>
+  <div class="cols">
+    <div class="col">
+      <h3>Why TF-IDF wins here</h3>
+      <ul>
+        <li>One narrow domain: <span class="mono">“therefore”</span>, <span class="mono">“=”</span>, LaTeX fragments carry the signal — semantic-similarity embeddings smooth over exactly those tokens.</li>
+        <li>632k training steps is <b>plenty</b> for sparse features; “small data” is not this task’s bottleneck.</li>
+        <li>Embeddings were pretrained for <b>meaning</b>, not for <b>correctness</b> — objective mismatch.</li>
+      </ul>
+    </div>
+    <div class="col">
+      <h3>How we made sure it’s real</h3>
+      <ul>
+        <li><b>Leakage check:</b> first random split put steps of one problem in both sets → all metrics inflated; re-split grouped by problem.</li>
+        <li><b>Label bug:</b> v1 kept only chosen completions → <b>99.8% positive</b>; caught by degenerate metrics, fixed, <b>everything re-run</b> (all numbers today = v2).</li>
+        <li>27.9% minority class → stratified seeds + balanced metrics; 50/50 re-check moves AUROC &lt; 0.01.</li>
+      </ul>
+    </div>
+  </div>
+  <aside class="notes">
+    <h4>2:30–3:20 · 解剖 + 处理（50 秒）——"怎么处理的"全在这页</h4>
+    <p class="zh">左栏是"为什么数据不好看"的科学解释，右栏是"我们怎么处理"。bug 故事要坦然讲，这是诚实分。强调：两个"看着不对"的数字，一个是我们的错，一个是真发现。</p>
+    <p>“Why does the baseline win? This is one narrow domain — the signal lives in tokens like ‘therefore’ and equals signs, and similarity-trained embeddings blur exactly those. And with six hundred thousand steps, sparse features are not starving. Two numbers on the way here looked wrong. The first was our fault: our label construction kept only chosen completions — ninety-nine point eight percent positive. The metrics degenerated, we caught it, and re-ran everything. The second wrong-looking number — the negative gap — survived every check we could throw at it. So we report it.”</p>
+  </aside>
+</section>
+
+<!-- ============ S6 · THE TURN — ABLATIONS · 3:20–4:20 ============ -->
+<section class="slide" data-seg="1:00">
+  <h2>The turn: change the regime θ, and the sign flips</h2>
+  <div class="figrow">
+    <div class="figcol" style="flex:1.1">
+      <img class="main" src="../figures/e3_generalization.png" alt="generalization under shift">
+      <div class="cap">E3 · MATH → GSM8K (composite shift, reported as such)</div>
+    </div>
+    <div style="flex:1.3">
+      <ul>
+        <li><b>E3 shift:</b> bge-large <span class="pos mono">Δ = +0.020</span> <span class="mono">[0.018, 0.021]</span>; bge-base <span class="pos mono">+0.006</span> <span class="mono">[0.004, 0.008]</span>; MiniLM n.s. — a clean <b>size gradient</b>.</li>
+        <li><b>Overfitting:</b> train−test gap <span class="mono">0.153–0.168</span> (TF-IDF) vs <span class="mono">0.040–0.065</span> (embeddings) — ≈3× smaller.</li>
+        <li><b>E4 perturbation:</b> both degrade ≤ 0.007 — honest <b>parity</b>, no robustness edge claimed.</li>
+        <li><b>E5 selective prediction:</b> TF-IDF risk 0.271, marginally better — reported as-is.</li>
+      </ul>
+    </div>
+  </div>
+  <div class="takeaway">Refined thesis: pretrained features are not most valuable when data is <b>scarce</b> —<br>they are most valuable when the distribution <b>drifts</b>.</div>
+  <aside class="notes">
+    <h4>3:20–4:20 · 消融反转（60 秒）——全场高潮</h4>
+    <p class="zh">语速回升。"sign flips"是关键词。E4/E5 是诚实 null，一句话带过不遮掩。最后 takeaway 逐字念，这是全场的 memorable line。</p>
+    <p>“Now the ablations — this is where the story turns. Move the distribution from MATH to GSM8K and the sign flips: bge-large beats TF-IDF by plus zero point zero two zero, tight interval, and the gain grows with model size — a gradient, not a fluke. Why? The overfitting numbers: TF-IDF’s train-test gap is three times larger; in-domain it wins by memorizing, and memorization does not travel. Perturbations: parity, we claim nothing. Selective prediction: TF-IDF still slightly better, reported as-is. So the refined thesis: <b>pretrained features are not most valuable when data is scarce — they are most valuable when the distribution drifts.</b>”</p>
+  </aside>
+</section>
+
+<!-- ============ S7 · PLANS + CLOSER · 4:20–4:45 ============ -->
+<section class="slide" data-seg="0:25">
+  <h2>Plans → final</h2>
+  <ul>
+    <li><b>E6 (started):</b> predict downstream Δ from representation properties — ρ = 0.90 on 4 points so far (preliminary); scale the grid of representations × regimes.</li>
+    <li>Wider shift grid (more source→target pairs) to map <b>where the sign flips</b>.</li>
+    <li>Final deliverable: three Δ curves — Δ(n), Δ(shift), Δ(perturbation) — as a measurement report, not a leaderboard.</li>
+  </ul>
+  <div class="takeaway">We asked <i>whether</i> pretrained representations help. The answer is not yes or no —<br><b>it is a map. We drew the first three coordinates.</b></div>
+  <aside class="notes">
+    <h4>4:20–4:45 · 收尾（25 秒）</h4>
+    <p class="zh">三条计划快速过（E6 的 ρ 一定要带 preliminary）。takeaway 念完鞠躬/停顿，等提问。留 15 秒余量，讲完应该是 4:45 左右。</p>
+    <p>“For the final: we have started E6 — predicting the downstream gap from properties of the representation itself, correlation zero point nine on four points, preliminary. We widen the shift grid to map where the sign flips. And the deliverable is three delta curves as a measurement report. We asked whether pretrained representations help. The answer is not yes or no — it is a map. We drew the first three coordinates. Thank you.”</p>
+  </aside>
+</section>
+
+<!-- ============ S8 · BACKUP (Q&A only, untimed) ============ -->
+<section class="slide" data-seg="—">
+  <h2>Backup — numbers for Q&amp;A <span class="tag">not timed</span></h2>
+  <table class="num">
+    <tr><th>axis θ</th><th>comparison</th><th>Δ / value</th><th>95% CI</th><th>read</th></tr>
+    <tr><td>n (in-domain)</td><td>embed − TF-IDF, full data</td><td class="neg">−0.048 … −0.064</td><td>excl. 0</td><td>TF-IDF wins, significant</td></tr>
+    <tr><td>n = 20</td><td>all features</td><td>≈ 0.51 AUROC</td><td>—</td><td>near random</td></tr>
+    <tr><td>shift MATH→GSM8K</td><td>bge-large − TF-IDF</td><td class="pos">+0.020</td><td>[0.018, 0.021]</td><td>sign flips</td></tr>
+    <tr><td>shift</td><td>bge-base − TF-IDF</td><td class="pos">+0.006</td><td>[0.004, 0.008]</td><td>size gradient</td></tr>
+    <tr><td>overfitting</td><td>train−test gap</td><td>0.153–0.168 vs 0.040–0.065</td><td>—</td><td>TF-IDF ≈3× gap</td></tr>
+    <tr><td>perturbation</td><td>accuracy drop</td><td>≤ 0.007 both</td><td>—</td><td>parity (honest null)</td></tr>
+    <tr><td>selective pred.</td><td>risk @ full coverage</td><td>TF-IDF 0.271</td><td>—</td><td>TF-IDF marginally better</td></tr>
+    <tr><td>E6 predictor</td><td>Spearman ρ</td><td>0.90 (n = 4)</td><td>—</td><td>preliminary</td></tr>
+  </table>
+  <ul style="margin-top:2vh">
+    <li class="sub">Likely Q: “Why not split randomly?” — steps of one problem share wording; random split leaks → inflated metrics. We grouped by problem.</li>
+    <li class="sub">Likely Q: “Why is AUROC not higher overall?” — step-level correctness is genuinely hard; we report Δ between feature sources, not absolute skill.</li>
+    <li class="sub">Likely Q: “Composite shift?” — dataset, problem type and label source all change MATH→GSM8K; we report it as a compound shift, no single-factor claim.</li>
+  </ul>
+  <aside class="notes">
+    <h4>Q&amp;A 备用页（不计时）</h4>
+    <p class="zh">被问到才翻到这页。三个必问题的答案就在屏上。AI 使用若被问：照实答——写作/调试辅助，实质性内容均已验证。</p>
+  </aside>
+</section>
+
+</div>
+
+<div id="bar"></div>
+<div id="hud"><span id="pos">1 / 8</span><br><span id="clock">0:00</span> <span class="seg" id="seg"></span></div>
+<div class="help">←/→ navigate · N notes · T timer</div>
+<div id="notes"></div>
+
+<script>
+(function(){
+  var slides=[].slice.call(document.querySelectorAll('section.slide'));
+  var notesBox=document.getElementById('notes');
+  var posEl=document.getElementById('pos'), clockEl=document.getElementById('clock'), segEl=document.getElementById('seg');
+  var i=0, t0=null, timerId=null;
+  function parseSeg(s){ if(s==='—') return null; var p=s.split(':'); return (+p[0])*60+(+p[1]); }
+  function fmt(s){ s=Math.floor(s); return Math.floor(s/60)+':'+('0'+(s%60)).slice(-2); }
+  function show(k){
+    i=Math.max(0,Math.min(slides.length-1,k));
+    slides.forEach(function(s,j){ s.classList.toggle('active', j===i); });
+    posEl.textContent=(i+1)+' / '+slides.length;
+    var seg=slides[i].dataset.seg;
+    segEl.textContent='seg '+seg;
+    var n=slides[i].querySelector('.notes');
+    notesBox.innerHTML = n ? n.innerHTML : '';
+    if(location.hash !== '#'+(i+1)) history.replaceState(null,'','#'+(i+1));
+  }
+  function tick(){ if(t0===null) return; clockEl.textContent=fmt((Date.now()-t0)/1000); }
+  document.addEventListener('keydown',function(e){
+    if(e.key==='ArrowRight'||e.key===' '||e.key==='PageDown'){ show(i+1); e.preventDefault(); }
+    else if(e.key==='ArrowLeft'||e.key==='PageUp'){ show(i-1); e.preventDefault(); }
+    else if(e.key==='Home'){ show(0); }
+    else if(e.key==='End'){ show(slides.length-1); }
+    else if(e.key==='n'||e.key==='N'){ notesBox.classList.toggle('on'); document.body.classList.toggle('withnotes'); }
+    else if(e.key==='t'||e.key==='T'){
+      if(t0===null){ t0=Date.now(); timerId=setInterval(tick,250); }
+      else { clearInterval(timerId); t0=null; clockEl.textContent='0:00'; }
+    }
+  });
+  var h=parseInt((location.hash||'').replace('#',''),10);
+  show(isNaN(h)?0:h-1);
+})();
+</script>
+</body>
+</html>
