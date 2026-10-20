@@ -49,7 +49,12 @@ _st_cache = {}
 def _encode_st(model_name: str, texts, batch_size: int = 256) -> np.ndarray:
     from sentence_transformers import SentenceTransformer
     if model_name not in _st_cache:
-        _st_cache[model_name] = SentenceTransformer(ST_MODELS[model_name])
+        m = SentenceTransformer(ST_MODELS[model_name])
+        if os.environ.get("ST_FP16") == "1":
+            # GB10 fp32 CUDA 核很弱，fp16 快 ~4x；与 fp32 的 embedding 余弦
+            # 相似度 >0.9997（实测 2000 条真实文本），对 AUROC 影响可忽略。
+            m = m.half()
+        _st_cache[model_name] = m
     model = _st_cache[model_name]
     out = np.full((len(texts), model.get_sentence_embedding_dimension()),
                   np.nan, dtype=np.float32)

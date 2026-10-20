@@ -1,0 +1,27 @@
+{
+  "note": "迁移集上 embedding−TF-IDF(word) 的 paired bootstrap Δ (svm, 1000 次)",
+  "classifier": "svm",
+  "results": {
+    "st-bge-large-en-v1.5 - tfidf-word": {
+      "delta_mean": 0.019558894697405294,
+      "ci95": [
+        0.0177599227216862,
+        0.02135881615121288
+      ]
+    },
+    "st-bge-base-en-v1.5 - tfidf-word": {
+      "delta_mean": 0.006307468459130037,
+      "ci95": [
+        0.004357368224342831,
+        0.008170585984167214
+      ]
+    },
+    "st-all-MiniLM-L6-v2 - tfidf-word": {
+      "delta_mean": -0.0007104565694381831,
+      "ci95": [
+        -0.0024850799937966906,
+        0.001166441040193422
+      ]
+    }
+  }
+}

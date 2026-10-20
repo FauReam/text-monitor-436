@@ -18,7 +18,7 @@
 ```
 ├── README.md              本文件
 ├── PREREGISTRATION.md     预登记：跑实验前锁定的预测与判定标准
-├── one-pager.md           中期 one-pager（10/20 交）
+├── one-pager.md           中期 one-pager（10/20 交；正式版为 one-pager.tex/pdf）
 ├── requirements.txt
 ├── run_all.sh             一键复现（DGX 上执行）
 ├── data/                  标准化后的步骤级数据（由 prep 脚本生成）
@@ -79,24 +79,58 @@ python slides/make_slides.py       # 嵌入最新 figures 重新生成 pptx
 - 全量训练结果经 `fit_full_cached` 在 E1/E2/E3/E4/E5 间共享（数值不变）。
 - E3/E4 的 embedding 编码先用 `src/pre_encode.py` 按 md5 分片 6 进程并行灌缓存，
   再跑正式脚本时全部命中缓存。
+- bge-large 的 E3/E4 尾部文本以 fp16 编码（`ST_FP16=1`，与 fp32 的逐向量余弦 > 0.9997，
+  不影响 AUROC 结论；见 `src/features.py`）。同 GPU 多进程并发编码吞吐骤降，
+  正式编码一律单进程串行。
+- 中期 one-pager 的 LaTeX 源与 PDF 为 `one-pager.tex` / `one-pager.pdf`。
 
-## 结果摘要（2026-10-20 跑完，种子 0）
+## 结果摘要（v2 标签修复版，2026-10-20 跑完）
 
-**任务**：PRM800K 步骤二分类（对=541,039 / 错=1,223，0.2% 正类的极端不平衡）。
-主指标 AUROC；全量训练 352k 步，test 102k 步（按题目分组）。
+**任务**：PRM800K 步骤二分类——1,015,027 步 / 10,825 题，二分类 911,867 行（错例占 27.9%）。
+按题目分组划分（seed=0）：train 632,422 / test 190,573 步。主指标 AUROC。
+迁移测试集：Math-Shepherd（GSM8K，613,666 步，47%/53% 近平衡）。
 
-**E1 · Δ(n) 学习曲线（预测 1：部分成立）**
-- 峰值位置 ✓：三种 embedding 对 TF-IDF(word) 的 AUROC 差均在 n=50 附近达峰
-  （MiniLM +0.029 / bge-base +0.026，10 种子均值；LR/SVM 一致）。
-- "gap 保持非负" ✗：n≥2000 后 bge 系转负；全量端 SVM 下
-  tfidf-char 0.704 ≥ bge-large 0.688 ≈ tfidf-word 0.688，MiniLM 0.654。
-- 工件注记：bge+LR 全量点 AUROC<0.5（0.2% 正类下 log-loss 的排序退化），
-  故正文以 SVM 为主对照、LR 并列给出。
+> 首版（v1）结果基于错误的标签构造（只取 chosen completion，正类占 99.8% 退化），
+> 已全部作废；本节全部为修复后（取全部带人工 rating 的 completions）的重跑结果。
 
-**E2 · 全量表征对比**：embedding − TF-IDF 的 Δ 在全量端为 -0.05~+0.01
-（区间跨 0，bootstrap CI 见 results/e2_representation_compare.json）。
+**E1 · Δ(n) 学习曲线（预登记预测 1：不成立）**
+- n=20 时所有特征（含 TF-IDF）均 ≈ 0.51 AUROC，近随机、区间重叠——预训练没有买到小样本优势。
+- n ≥ 50 起 TF-IDF 反超并保持到全量；embedding − TF-IDF(word) 的 Δ（SVM，10 种子均值）
+  从 −0.003（n=50）单调走负到 −0.045（bge-large，full）；MiniLM 全量端 −0.064。
+- 全量 AUROC（SVM）：tfidf-word 0.696 / tfidf-char 0.687 / bge-large 0.650 / bge-base 0.650 / MiniLM 0.631。
 
-**E3 · Δ(偏移)（预测 2）/ E4 · Δ(扰动)（预测 3）/ E5 / E6**：见下节与 results/。
+**E2 · 全量表征对比（带 bootstrap CI）**：embedding 全量端显著为负，
+Δ = −0.037 ~ −0.064（bge-large − tfidf-word，SVM = −0.045，CI 不含 0；
+逐特征 CI 见 results/e2_representation_compare.json）。
+
+**E3 · Δ(偏移)（预登记预测 2：部分成立）**
+- 同分布端 TF-IDF 更高（0.696 vs 0.650），迁移端（MATH→GSM8K）反转：
+  bge-large 0.571 > tfidf-word 0.551。
+- paired bootstrap（1000 次，SVM，results/e3_transfer_delta_ci.json）：
+  bge-large Δ = +0.020，CI[0.018, 0.021]（显著正）；
+  bge-base +0.006，CI[0.004, 0.008]（显著正）；
+  MiniLM −0.001，CI[−0.002, 0.001]（跨 0，不显著）。
+- 退化幅度：tfidf-word −0.145 vs bge-large −0.080——embedding 更耐偏移；
+  train−test gap 同样悬殊：TF-IDF 0.153–0.168 vs embedding 0.040–0.065。
+- 注意：MATH→GSM8K 是复合偏移（题型 + 来源 + 标签方式同时变），不作单因素归因。
+
+**E4 · Δ(扰动)（预登记预测 3：成立，效应量小）**
+- 规则扰动（typo / 数字格式 / LaTeX / 组合）下所有特征衰减 ≤ 0.007 AUROC。
+- latex / combo 下 embedding 衰减（≤ 0.002，个别为负即扰动后反而略升）
+  ≤ TF-IDF（tfidf-char SVM 0.005 / 0.007）。
+
+**E5 · 拒答机制（可选）**：risk@coverage=1.0 下 TF-IDF 0.271 略优于 embedding
+（0.276–0.278）；低覆盖端各特征均把 risk 压到 ≈ 0.05（Chow 规则有效），TF-IDF 优势保持。
+
+**E6 · 可预测性（可选，discussion）**：训练集散度统计量与实测 Δ 同号，
+Spearman ρ = 0.900（p = 0.037，n = 4 点）——仅作初步观察 / future work。
+
+**稳健性补查**（回应"训练集 28/72 不平衡"的质疑）：50/50 重采样平衡训练集与
+`class_weight='balanced'` 两种处理下，各特征 AUROC 变化均 < 0.01
+（results/robustness_balance_check.json）——上述结论不由类别比例驱动。
+
+三条预登记预测最终判定：**预测 1 不成立 · 预测 2 部分成立 · 预测 3 成立（效应量小）**。
+一句话修正版结论：预训练特征不是在"数据少"时最值钱，而是在"分布会漂"时最值钱。
 
 ## 合规
 

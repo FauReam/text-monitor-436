@@ -38,17 +38,22 @@ def convert(paths, out, max_per_step: int = 0):
             problem = ex["question"]["problem"]
             pid = problem_id_of(problem)
             for st in ex["label"]["steps"]:
-                comps = [c for c in st["completions"] if c.get("rating") in RATING]
-                skipped += len(st["completions"]) - len(comps)
+                raw_comps = st.get("completions") or []  # human_completion 步骤为 None
+                comps = [c for c in raw_comps if c.get("rating") in RATING]
+                skipped += len(raw_comps) - len(comps)
                 if max_per_step > 0 and len(comps) > max_per_step:
                     neg = [c for c in comps if c["rating"] <= 0]
                     pos = [c for c in comps if c["rating"] > 0]
                     comps = neg + pos[:max(0, max_per_step - len(neg))]
                 for comp in comps:
+                    text = (comp.get("text") or "").strip()
+                    if not text:
+                        skipped += 1
+                        continue
                     rows.append({
                         "problem_id": pid,
                         "problem_text": problem,
-                        "step_text": comp["text"],
+                        "step_text": text,
                         "label": LABEL_MAP[RATING[comp["rating"]]],
                     })
     df = pd.DataFrame(rows)

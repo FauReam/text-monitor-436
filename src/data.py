@@ -33,9 +33,10 @@ def load_steps(name: str, drop_neutral: bool = True) -> pd.DataFrame:
 
 def input_texts(df: pd.DataFrame, mode: str = "problem+step") -> list:
     if mode == "problem+step":
-        return (df["problem_text"].fillna("") + "\n" + df["step_text"]).tolist()
+        return (df["problem_text"].fillna("") + "\n"
+                + df["step_text"].fillna("")).tolist()
     if mode == "step":
-        return df["step_text"].tolist()
+        return df["step_text"].fillna("").tolist()
     raise ValueError(mode)
 
 

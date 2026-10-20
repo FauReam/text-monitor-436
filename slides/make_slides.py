@@ -167,17 +167,19 @@ def build_final():
     s = add_slide(prs, "预训练表征值多少：一个 Δ(θ) 测量报告")
     add_bullets(s, [
         (0, "CSI 436/536 · Project P · Final · Group: [组员姓名]"),
-        (0, "一句话结论（跑完后填数字）：在推理步骤判错任务上，预训练表征"),
-        (1, "把达到 AUROC __ 所需标注量降低约 __ 倍（Δ(n) 峰值在 n=__ 处，Δ=__）"),
-        (1, "分布偏移下 Δ = __（仍为正/归零）；扰动下 Δ = __"),
-    ], top=2.0, size=20)
+        (0, "一句话结论（PRM800K，10 种子，SVM）：预训练表征的价值高度依赖评测制度"),
+        (1, "同分布全量数据：Δ = −0.045 ~ −0.064 AUROC——预训练不提升，TF-IDF 反而更好（CI 不含 0）"),
+        (1, "小样本端 n=20：所有特征 ≈ 0.51（近随机），预训练没有买到 sample efficiency"),
+        (1, "分布偏移（MATH→GSM8K）：bge-large Δ = +0.020，CI[0.018, 0.021]，显著为正"),
+        (1, "规则扰动：embedding 衰减 ≤ TF-IDF，但所有衰减 ≤ 0.007 AUROC"),
+    ], top=1.8, size=19)
 
     s = add_slide(prs, "Recap: question and formalization")
     add_bullets(s, [
         (0, "课程固定问题：预训练表征是否提升下游任务？"),
         (0, "Δ(θ) = L_test(TF-IDF) − L_test(embedding)；θ = (n, 偏移, 扰动)"),
         (0, "唯一变量 = 特征来源；g = 逻辑回归 / 线性 SVM；全部冻结、无 fine-tune"),
-        (0, "任务载体：数学推理步骤判对错（PRM800K 人工标签）"),
+        (0, "任务载体：数学推理步骤判对错（PRM800K 人工标签，错例占 27.9%）"),
     ], size=20)
 
     s = add_slide(prs, "Setup (Soundness)")
@@ -188,54 +190,59 @@ def build_final():
     ], size=20)
 
     s = add_slide(prs, "Result 1: Δ(n) — sample efficiency")
-    add_figure_or_placeholder(s, "e1_learning_curve.png", [
-        "左/本图：学习曲线（均值 ± 95% 区间）；结论句：预训练表征在小样本端把所需标注量降低约 __ 倍",
+    add_figure_or_placeholder(s, "e1_learning_curve_svm.png", [
+        "学习曲线（SVM，均值 ± 95% 区间）：n=20 时各特征均 ≈ 0.51（近随机，区间重叠）；n ≥ 50 起 TF-IDF 持续领先",
+        "结论句（差值语言）：在本任务上预训练表征未能降低所需标注量——任何 n 处 Δ ≤ 0",
     ])
 
     s = add_slide(prs, "Result 1b: the gap itself")
-    add_figure_or_placeholder(s, "e1_gap.png", [
-        "Δ(n) = AUROC(embedding) − AUROC(TF-IDF)；峰值位置 = “何时帮助最大”的量化答案",
-        "预登记预测 1（峰值在 n ≤ 100）：[成立 / 部分成立 / 不成立，如实填]",
+    add_figure_or_placeholder(s, "e1_gap_svm.png", [
+        "Δ(n) = AUROC(embedding) − AUROC(TF-IDF)：gap 全程非正且随 n 单调走负，full 端 −0.045 ~ −0.064",
+        "预登记预测 1（峰值在 n ≤ 100）：不成立——峰值不在小样本端，小样本端所有特征都还在随机水平",
     ])
 
     s = add_slide(prs, "Result 2: Δ(偏移) — generalization")
-    add_figure_or_placeholder(s, "e3_generalization.png", [
-        "MATH→GSM8K 为复合分布偏移（题型+来源+标签方式），不作单因素归因",
-        "预登记预测 2（偏移下 Δ 仍为正）：[成立 / 部分成立 / 不成立]",
+    add_figure_or_placeholder(s, "e3_generalization_svm.png", [
+        "同分布端 TF-IDF 更高（0.696 vs 0.650）；迁移端反转：bge-large 0.571 vs TF-IDF 0.551",
+        "paired bootstrap (1000 次)：bge-large Δ=+0.020 CI[0.018,0.021]，bge-base +0.006 CI[0.004,0.008]，MiniLM −0.001 跨 0",
+        "预登记预测 2（偏移下 Δ 仍为正）：部分成立——bge 系显著为正，MiniLM 不显著；复合偏移不作单因素归因",
     ])
 
     s = add_slide(prs, "Result 2b: train vs test")
-    add_figure_or_placeholder(s, "e3_train_test.png", [
-        "train/test 差距 = 过拟合视角的 generalization（L06–L07）",
+    add_figure_or_placeholder(s, "e3_train_test_svm.png", [
+        "train−test gap：TF-IDF 0.153–0.168，embedding 仅 0.040–0.065",
+        "TF-IDF 拟合了大量只在 MATH 内有效的表面特征；embedding 表示更“抗过拟合”，迁移端衰减更小（−0.08 vs −0.14）",
     ])
 
     s = add_slide(prs, "Result 3: Δ(扰动) — robustness")
-    add_figure_or_placeholder(s, "e4_robustness.png", [
-        "规则式扰动（typo / 数字格式 / LaTeX）下的 AUROC 衰减；",
-        "预登记预测 3（embedding 衰减 ≤ TF-IDF）：[成立 / 部分成立 / 不成立]",
+    add_figure_or_placeholder(s, "e4_robustness_svm.png", [
+        "规则式扰动（typo / 数字格式 / LaTeX）下所有特征衰减都很小（≤ 0.007 AUROC）",
+        "latex / combo 下 embedding 衰减（≤ 0.002）≤ TF-IDF（最大 0.005–0.007）",
+        "预登记预测 3（embedding 衰减 ≤ TF-IDF）：成立——但效应量小，方向性结论",
     ])
 
     s = add_slide(prs, "When do pretrained representations help most?")
     add_bullets(s, [
-        (0, "量化答案 = 三条 gap 曲线的峰值与归零位置（跑完后填数字）"),
-        (1, "n 轴：Δ 峰值在 n = __；大 n 端收窄到 __"),
-        (1, "偏移轴：Δ = __；扰动轴：衰减差 = __"),
-        (0, "一句话：外部预训练特征在“本地数据买不起低 test loss 的制度”最值钱"),
+        (0, "量化答案 = 三条 gap 曲线的实测形态"),
+        (1, "n 轴：Δ 最接近 0 处在 n=20（≈ 0，但大家都在随机水平）；随 n 增大走负，full 端 −0.045 ~ −0.064"),
+        (1, "偏移轴：bge-large Δ = +0.020（显著正）；扰动轴：衰减差 ≤ 0.005（embedding 略优）"),
+        (0, "一句话修正版：预训练特征不是在“数据少”时最值钱，而是在“分布会漂”时最值钱"),
+        (0, "本任务同分布端收益为负 = 如实报告的边界结论"),
     ], size=20)
 
     s = add_slide(prs, "Novelty (1.6) & optional analyses")
     add_bullets(s, [
         (0, "三个预训练表征（MiniLM / bge-base / bge-large）× 两种分类器"),
         (1, "注：家族与维度不同，只表述为模型间对比，不声称纯规模效应"),
-        (0, "（可选）E5 拒答机制：风险-覆盖率曲线"),
-        (0, "（可选）E6 初步观察：训练集散度统计量 vs 实测 Δ，n=4 点，仅作 future work"),
+        (0, "E5 拒答机制：risk@coverage=1.0 TF-IDF 0.271 略优于 embedding（0.276–0.278），优势不大"),
+        (0, "E6 初步观察：训练集散度统计量与实测 Δ 同号，Spearman ρ=0.90（p=0.037，n=4），仅作 future work"),
     ], size=19)
 
     s = add_slide(prs, "Limitations & honest boundaries")
     add_bullets(s, [
         (0, "只覆盖静态错误识别；不研究对抗性躲避（需 RL，超出课程范围）"),
         (0, "复合分布偏移不做单因素归因；小样本结论均带区间"),
-        (0, "Δ ≈ 0 的区域如实报告为边界，不是失败"),
+        (0, "Δ < 0 的同分布结论如实报告为边界；训练集天然 28/72 不平衡，补做 50/50 重采样稳健性检验（AUROC 变化 < 0.01）"),
     ], size=20)
 
     s = add_slide(prs, "Requirement checklist")

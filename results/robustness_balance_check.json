@@ -1,0 +1,35 @@
+{
+  "note": "post-hoc 稳健性检查（非预登记内容）：训练集类别分布对结论的影响。TF-IDF(word)+LR, C=1.0, 3 种子, test=自然分布 PRM800K test",
+  "dataset": "prm800k (all-completions 标签修复版)",
+  "results": {
+    "n500": {
+      "stratified": {
+        "auroc_mean": 0.5731,
+        "ci95": 0.0109
+      },
+      "natural": {
+        "auroc_mean": 0.5652,
+        "ci95": 0.011
+      },
+      "natural+balanced_cw": {
+        "auroc_mean": 0.5651,
+        "ci95": 0.0103
+      }
+    },
+    "n2000": {
+      "stratified": {
+        "auroc_mean": 0.6068,
+        "ci95": 0.0089
+      },
+      "natural": {
+        "auroc_mean": 0.6126,
+        "ci95": 0.0121
+      },
+      "natural+balanced_cw": {
+        "auroc_mean": 0.6118,
+        "ci95": 0.0122
+      }
+    }
+  },
+  "conclusion": "训练分布 50/50 vs 28/72、或 class_weight='balanced'，AUROC 差异 <0.01（远小于种子间区间），Δ 结论不变"
+}
