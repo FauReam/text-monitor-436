@@ -14,6 +14,8 @@ import numpy as np
 import pandas as pd
 from sklearn.model_selection import GroupShuffleSplit
 
+from utils import DATA
+
 LABEL_MAP = {"correct": 1, "incorrect": -1, "neutral": 0}
 
 

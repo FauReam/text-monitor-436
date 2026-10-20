@@ -40,7 +40,7 @@ def _load(name):
         return json.load(f)
 
 
-def fig_e1(dataset="prm800k", clf="lr"):
+def fig_e1(dataset="prm800k", clf="lr", suffix=""):
     d = _load(f"e1_learning_curves_{dataset}.json")
     if not d:
         return
@@ -67,7 +67,7 @@ def fig_e1(dataset="prm800k", clf="lr"):
     ax.set_xlabel("training samples n (log scale)")
     ax.set_ylabel("test AUROC")
     ax.legend()
-    _save(fig, "e1_learning_curve")
+    _save(fig, f"e1_learning_curve{suffix}")
 
     # Δ(n)：相对 tfidf-word
     if "tfidf-word" in res:
@@ -92,10 +92,10 @@ def fig_e1(dataset="prm800k", clf="lr"):
         ax.set_xlabel("training samples n (log scale)")
         ax.set_ylabel("Δ AUROC (embedding − TF-IDF)")
         ax.legend()
-        _save(fig, "e1_gap")
+        _save(fig, f"e1_gap{suffix}")
 
 
-def fig_e3(clf="lr"):
+def fig_e3(clf="lr", suffix=""):
     d = _load("e3_generalization.json")
     if not d:
         return
@@ -111,7 +111,7 @@ def fig_e3(clf="lr"):
     ax.set_xticks(x, [FEAT_STYLE[f]["label"] for f in feats])
     ax.set_ylabel("test AUROC")
     ax.legend()
-    _save(fig, "e3_generalization")
+    _save(fig, f"e3_generalization{suffix}")
 
     fig, ax = plt.subplots(figsize=(8, 4))
     tr_m = [res[f][clf]["train_metrics"]["auroc"] for f in feats]
@@ -121,10 +121,10 @@ def fig_e3(clf="lr"):
     ax.set_xticks(x, [FEAT_STYLE[f]["label"] for f in feats])
     ax.set_ylabel("AUROC")
     ax.legend()
-    _save(fig, "e3_train_test")
+    _save(fig, f"e3_train_test{suffix}")
 
 
-def fig_e4(clf="lr"):
+def fig_e4(clf="lr", suffix=""):
     d = _load("e4_robustness.json")
     if not d:
         return
@@ -141,7 +141,7 @@ def fig_e4(clf="lr"):
     ax.set_xticks(x + 0.4 - w / 2, perts)
     ax.set_ylabel("AUROC drop vs clean")
     ax.legend()
-    _save(fig, "e4_robustness")
+    _save(fig, f"e4_robustness{suffix}")
 
 
 def fig_e5():
@@ -179,8 +179,10 @@ def fig_e6():
 
 
 if __name__ == "__main__":
-    fig_e1()
-    fig_e3()
-    fig_e4()
+    for clf in ("lr", "svm"):
+        suffix = "" if clf == "lr" else "_svm"
+        fig_e1(clf=clf, suffix=suffix)
+        fig_e3(clf=clf, suffix=suffix)
+        fig_e4(clf=clf, suffix=suffix)
     fig_e5()
     fig_e6()

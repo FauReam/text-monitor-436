@@ -3,12 +3,14 @@
 训练：PRM800K（MATH，人工标签）。测试：PRM800K test（同分布）+ Math-Shepherd（GSM8K，自动标签）。
 注意：这是复合分布偏移（题型、来源、标签方式同时变化），报告时不作单因素归因。
 另输出 train vs test 指标对比（L06–L07 的 generalization 分析）。
+全量拟合经 fit_full_cached 与 E1/E2/E4/E5 共享（数值与重复训练一致）。
 """
 import argparse
 
-from data import group_split, load_steps
-from features import FEATURES, Featurizer
-from protocol import fit_and_eval
+from data import group_split, input_texts, load_steps
+from features import FEATURES
+from metrics import compute_metrics, scores_of
+from protocol import fit_full_cached
 from utils import save_json, set_seed
 
 CLASSIFIERS = ["lr", "svm"]
@@ -31,34 +33,32 @@ def main():
 
     results = {}
     for feat in a.features:
-        fz = Featurizer(feat)
         results[feat] = {}
         for clf_name in CLASSIFIERS:
-            r_in = fit_and_eval(clf_name, fz, train_df, test_in, seed=a.seed)
-            # 迁移：用同一 featurizer（embedding 无状态；TF-IDF 已在训练集 fit）
-            from data import input_texts
-            from metrics import compute_metrics, scores_of
-            from protocol import make_classifier
-            clf = make_classifier(clf_name, r_in["C"], a.seed)
-            from features import Featurizer as Fz  # 复用已 fit 的实例
-            Xtr = fz.fit_transform(input_texts(train_df))
-            clf.fit(Xtr, train_df["label"].to_numpy())
-            Xtt = fz.transform(input_texts(test_transfer))
+            fz, clf, info = fit_full_cached(feat, clf_name, train_df,
+                                            seed=a.seed)
+            # 同分布 test
+            m_in = compute_metrics(test_in["label"].to_numpy(),
+                                   scores_of(clf, fz.transform(
+                                       input_texts(test_in))))
+            # 迁移 test：同一 featurizer（embedding 无状态；TF-IDF 已在训练集 fit）
             m_tt = compute_metrics(test_transfer["label"].to_numpy(),
-                                   scores_of(clf, Xtt))
+                                   scores_of(clf, fz.transform(
+                                       input_texts(test_transfer))))
             results[feat][clf_name] = {
-                "C": r_in["C"],
-                "train_metrics": r_in["train"],
-                "test_in_domain": r_in["test"],
+                "C": info["C"],
+                "train_metrics": info["train"],
+                "test_in_domain": m_in,
                 "test_transfer": m_tt,
                 "delta_transfer_minus_in": round(
-                    m_tt["auroc"] - r_in["test"]["auroc"], 4),
+                    m_tt["auroc"] - m_in["auroc"], 4),
                 "train_test_gap": round(
-                    r_in["train"]["auroc"] - r_in["test"]["auroc"], 4),
+                    info["train"]["auroc"] - m_in["auroc"], 4),
             }
-            print(f"{feat} {clf_name}: in={r_in['test']['auroc']:.4f} "
+            print(f"{feat} {clf_name}: in={m_in['auroc']:.4f} "
                   f"transfer={m_tt['auroc']:.4f} "
-                  f"train-test gap={results[feat][clf_name]['train_test_gap']}")
+                  f"train-test gap={results[feat][clf_name]['train_test_gap']}",
+                  flush=True)
 
     save_json({"train_dataset": a.train_dataset,
                "transfer_dataset": a.transfer_dataset, "seed": a.seed,

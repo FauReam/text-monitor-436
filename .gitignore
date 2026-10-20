@@ -1,6 +1,6 @@
-results/
-figures/
 data/
+logs/
+.venv/
 __pycache__/
 *.npy
 *.joblib

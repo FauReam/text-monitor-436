@@ -2,15 +2,16 @@
 
 在全量训练数据上横向对比四种特征 × 两种分类器，带 bootstrap CI。
 结论以 Δ = AUROC(embedding) − AUROC(TF-IDF) 表述。
+全量拟合经 fit_full_cached 与 E1/E3/E4/E5 共享（数值与重复训练一致）。
 """
 import argparse
 
 import numpy as np
 
-from data import group_split, load_steps
-from features import FEATURES, Featurizer
-from metrics import bootstrap_ci, scores_of
-from protocol import fit_and_eval
+from data import group_split, input_texts, load_steps
+from features import FEATURES
+from metrics import bootstrap_ci, compute_metrics, scores_of
+from protocol import fit_full_cached
 from utils import save_json, set_seed
 
 CLASSIFIERS = ["lr", "svm"]
@@ -26,20 +27,23 @@ def main():
 
     df = load_steps(a.dataset)
     train_df, _, test_df = group_split(df, seed=a.seed)
+    yte = test_df["label"].to_numpy()
 
     results = {}
     for feat in a.features:
         results[feat] = {}
         for clf_name in CLASSIFIERS:
-            r = fit_and_eval(clf_name, Featurizer(feat), train_df, test_df,
-                             seed=a.seed)
-            ci = bootstrap_ci(np.array(r["y_test"]), np.array(r["s_test"]))
+            fz, clf, info = fit_full_cached(feat, clf_name, train_df,
+                                            seed=a.seed)
+            s_test = scores_of(clf, fz.transform(input_texts(test_df)))
+            test_m = compute_metrics(yte, s_test)
+            ci = bootstrap_ci(yte, np.asarray(s_test))
             results[feat][clf_name] = {
-                "C": r["C"], "test": r["test"], "train": r["train"],
+                "C": info["C"], "test": test_m, "train": info["train"],
                 "auroc_ci95": ci,
             }
-            print(f"{feat} {clf_name}: test AUROC={r['test']['auroc']:.4f} "
-                  f"CI={ci} (C={r['C']})")
+            print(f"{feat} {clf_name}: test AUROC={test_m['auroc']:.4f} "
+                  f"CI={ci} (C={info['C']})", flush=True)
 
     # Δ 汇总：每个 embedding 相对 tfidf-word / tfidf-char 的 AUROC 差
     deltas = {}

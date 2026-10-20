@@ -8,7 +8,7 @@ import argparse
 
 import numpy as np
 
-from data import group_split, load_sst2, load_steps, subsample_stratified
+from data import group_split, input_texts, load_sst2, load_steps, subsample_stratified
 from features import FEATURES, Featurizer
 from protocol import fit_and_eval
 from utils import save_json, set_seed
@@ -26,6 +26,10 @@ def main():
     ap.add_argument("--n-list", nargs="*", type=int,
                     default=[n for n in N_LIST if n])
     ap.add_argument("--n-seeds", type=int, default=N_SEEDS)
+    ap.add_argument("--full-seeds", type=int, default=None,
+                    help="n=全量时用的种子数（全量无抽样随机性，可用 1；默认同 n-seeds）")
+    ap.add_argument("--out-suffix", default="",
+                    help="结果文件名后缀，便于按特征并行跑后合并")
     ap.add_argument("--seed", type=int, default=0)
     ap.add_argument("--quick", action="store_true",
                     help="冒烟测试：只跑 tfidf-word + 一个 embedding，n 只到 100，2 种子")
@@ -36,6 +40,7 @@ def main():
         a.features = ["tfidf-word", "st-all-MiniLM-L6-v2"]
         a.n_list = [20, 100]
         a.n_seeds = 2
+    full_seeds = a.full_seeds or a.n_seeds
 
     df = load_sst2() if a.dataset == "sst2" else load_steps(a.dataset)
     train_df, val_df, test_df = group_split(df, seed=a.seed)
@@ -50,23 +55,39 @@ def main():
             results[feat][clf_name] = {}
             for n in a.n_list + [None]:
                 runs = []
-                for s in range(a.n_seeds):
-                    sub = (trainval if n is None else
-                           subsample_stratified(trainval, n, seed=a.seed * 1000 + s))
-                    r = fit_and_eval(clf_name, Featurizer(feat), sub, test_df,
-                                     seed=a.seed * 1000 + s)
+                n_seeds = a.n_seeds if n is not None else full_seeds
+                for s in range(n_seeds):
+                    if n is None:
+                        # 全量点：与 E2–E5 共享同一份拟合结果（磁盘缓存）
+                        from metrics import compute_metrics, scores_of
+                        from protocol import fit_full_cached
+                        fz, clf, info = fit_full_cached(
+                            feat, clf_name, trainval, seed=a.seed * 1000 + s)
+                        Xte = fz.transform(input_texts(test_df))
+                        r = {"C": info["C"], "train": info["train"],
+                             "test": compute_metrics(
+                                 test_df["label"].to_numpy(),
+                                 scores_of(clf, Xte))}
+                        sub_n = len(trainval)
+                    else:
+                        sub = subsample_stratified(trainval, n,
+                                                   seed=a.seed * 1000 + s)
+                        r = fit_and_eval(clf_name, Featurizer(feat), sub,
+                                         test_df, seed=a.seed * 1000 + s)
+                        sub_n = len(sub)
                     runs.append({
-                        "seed": a.seed * 1000 + s, "n": len(sub), "C": r["C"],
+                        "seed": a.seed * 1000 + s, "n": sub_n, "C": r["C"],
                         "test": r["test"], "train": r["train"],
                     })
-                    print(f"{feat} {clf_name} n={len(sub)} seed={s} "
-                          f"AUROC={r['test']['auroc']:.4f}")
+                    print(f"{feat} {clf_name} n={sub_n} seed={s} "
+                          f"AUROC={r['test']['auroc']:.4f}", flush=True)
                 key = "full" if n is None else str(n)
                 results[feat][clf_name][key] = runs
 
     save_json({"dataset": a.dataset, "seed": a.seed, "n_seeds": a.n_seeds,
-               "results": results}, f"e1_learning_curves_{a.dataset}.json")
-    print("saved results/e1_learning_curves_%s.json" % a.dataset)
+               "results": results},
+              f"e1_learning_curves_{a.dataset}{a.out_suffix}.json")
+    print("saved results/e1_learning_curves_%s%s.json" % (a.dataset, a.out_suffix))
 
 
 if __name__ == "__main__":

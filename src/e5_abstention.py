@@ -10,8 +10,8 @@ import argparse
 import numpy as np
 
 from data import group_split, input_texts, load_steps
-from features import FEATURES, Featurizer
-from protocol import fit_and_eval, make_classifier
+from features import FEATURES
+from protocol import fit_full_cached
 from metrics import scores_of
 from utils import save_json, set_seed
 
@@ -48,14 +48,11 @@ def main():
 
     results = {}
     for feat in a.features:
-        fz = Featurizer(feat)
-        r = fit_and_eval(a.classifier, fz, train_df, test_df, seed=a.seed)
-        clf = make_classifier(a.classifier, r["C"], a.seed)
-        clf.fit(fz.fit_transform(input_texts(train_df)),
-                train_df["label"].to_numpy())
+        fz, clf, info = fit_full_cached(feat, a.classifier, train_df,
+                                        seed=a.seed)
         s = scores_of(clf, fz.transform(input_texts(test_df)))
         results[feat] = {
-            "C": r["C"], "risk_coverage": risk_coverage(yte, s),
+            "C": info["C"], "risk_coverage": risk_coverage(yte, s),
             "risk_at_full": risk_coverage(yte, s, n_points=1)[0]["risk"],
         }
         print(f"{feat}: risk@coverage=1.0 -> {results[feat]['risk_at_full']:.4f}")
