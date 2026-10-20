@@ -122,8 +122,9 @@ def build_midterm():
 
     s = add_slide(prs, "Current progress")
     add_figure_or_placeholder(s, "e1_learning_curve.png", [
-        "学习曲线雏形（x = 训练样本数 n，log 轴；y = test AUROC；阴影 = 10 种子 95% 区间）",
-        "结论句（差值语言）：[跑完后填] n ≤ 100 时 embedding − TF-IDF 的 Δ = __ 个 AUROC 点",
+        "学习曲线（LR，10 种子均值 ± 95% 区间，标签修复后的 v2 数据：91 万步、错例 27.9%、按题目分组）",
+        "结论句（差值语言）：n=20 时所有特征 ≈ 0.51 近随机；n ≥ 50 起 Δ 转负并单调走负，full 端 −0.048 ~ −0.064",
+        "——同分布端预训练未提升，这是如实报告的边界；泛化/扰动轴见 E3/E4（偏移下 bge-large Δ=+0.020 显著正）",
     ])
 
     s = add_slide(prs, "Challenges")
