@@ -33,12 +33,14 @@
 
 - 页序 = 官方建议顺序；每页标题本身就是该页信息句
 - 时间分配见 C 节；backup 页（要求清单）只在 Q&A 时用
+- **开口第一句 = headline**（Clarity 同源）：*"The value of pretrained features is regime-dependent: in-distribution they do not help; when the dataset shifts, they do."* 随后声明三张图对应 n / shift / noise 三条曲线；Δ(θ) 记号不作开场，放在 setup 页
 - 口播句：开场 15 秒内给出路线图：*"Background, setup, the challenge we hit, what we have so far, and the plan."*
+- 预演必问 "in-domain 为什么 TF-IDF 反而赢"：步级对错判断是窄任务，字符 n-gram 基线本来就很强；词向量的优势在词面重叠失效时（跨数据集）才体现（E3 +0.020 即证据）
 
 ### 3. Clarity（图的规范 + 差值语言）
 
 - 唯一的结果图：x 轴 = 训练样本数（log），y 轴 = test AUROC，5 条线带图例，阴影 = 10 种子 95% 区间
-- 每页 bullet ≤ 6 行；结论句一律差值语言（"Δ = −0.048 ~ −0.064"），不报孤立绝对数
+- 每页 bullet ≤ 6 行；结论句一律差值语言（"Δ = −0.045 ~ −0.064"），不报孤立绝对数
 - 口播句（指图）：*"Read the gap, not the levels: below n=20 nothing learns; from n=50 on, TF-IDF pulls ahead."*
 
 ### 4. Current progress（第 6 页，图页）
@@ -46,7 +48,7 @@
 已有的是完整管线 + 干净数据上的全量学习曲线：
 
 - v2 数据（91 万步，错例 27.9%）；学习曲线 E1 完成（n=20…全量 × 5 特征 × 2 分类器 × 10 种子）
-- 结论句：**n=20 时所有特征 ≈ 0.51（近随机）；n ≥ 50 起 Δ 转负并单调走负，full 端 −0.048 ~ −0.064**——同分布端预训练未提升，这是如实报告的边界
+- 结论句：**n=20 时所有特征 ≈ 0.51（近随机）；n ≥ 50 起 Δ 转负并单调走负，full 端 −0.045 ~ −0.064**——同分布端预训练未提升，这是如实报告的边界
 - 补一句防误读：*"The in-domain gap is negative — but on the transfer axis the sign flips: bge-large beats TF-IDF by +0.020 with CI [0.018, 0.021]."*
 - 口播句：*"This is not a failed result — it localizes where the value of pretrained features is NOT."*
 

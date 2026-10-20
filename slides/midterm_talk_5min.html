@@ -71,14 +71,15 @@
 <!-- ============ S1 · TITLE · 0:00–0:15 ============ -->
 <section class="slide" data-seg="0:15">
   <div class="kicker">CSI 436/536 · Project P · Midterm · Group 8</div>
-  <h1>Cheap Text Monitors × Pretrained Representations:<br>a Δ(θ) measurement report</h1>
-  <p class="lead">We replaced the yes/no question — <i>“do pretrained representations help?”</i> —
-    with a measurement question: <b>where</b> is the value, and where is it <b>not</b>?</p>
-  <p class="lead" style="font-size:1.1vw">Jiayu Liao · Zeyu Pan · Yuhan Sun</p>
+  <h1>Cheap Text Monitors × Pretrained Representations</h1>
+  <p class="lead" style="margin-top:3vh"><b>Headline:</b> the value of pretrained features is <b>regime-dependent</b> —<br>
+    in-distribution they do <b>not</b> help; when the dataset shifts, they do.</p>
+  <p class="lead" style="font-size:1.15vw">Three regimes, three curves: training size n · distribution shift · perturbation.</p>
+  <p class="lead" style="font-size:1.0vw; color:var(--dim)">Jiayu Liao · Zeyu Pan · Yuhan Sun</p>
   <aside class="notes">
-    <h4>0:00–0:15 · 开场（15 秒，别超时）</h4>
-    <p class="zh">一句话钩子，说完直接翻页。不要介绍组员（名字在屏上）。</p>
-    <p>“Everyone will tell you today whether pretrained features helped their task. We built a cheap text monitor that reads math reasoning steps and judges right from wrong — and instead of a yes or no, we measured <b>where</b> the value of pretrained features actually lives. First, sixty seconds of checklist — then the number that surprised us.”</p>
+    <h4>0:00–0:15 · 开口第一句就是 headline（15 秒）</h4>
+    <p class="zh">第一句必须直接给结论（Clarity 分），不铺垫、不念标题、不介绍组员。headline 念完停一拍，再用 n / shift / noise 三个词给路线图，翻页。</p>
+    <p>“The value of pretrained features is regime-dependent: in-distribution, they do not help — when the dataset shifts, they do. We show this on a cheap text monitor that judges math reasoning steps, as three curves: training size, distribution shift, and perturbation. First, every required element in sixty seconds — then the number behind the headline.”</p>
   </aside>
 </section>
 
@@ -133,12 +134,12 @@
   <ul>
     <li>Textbook expectation: pretrained features help <b>most when n is small</b> (sample efficiency).</li>
     <li>Measured: n = 20 → everything ≈ <b>0.51, near random</b> — nothing to compare. n ≥ 50 → Δ turns <span class="neg">negative</span> and stays monotone; 10/10 seeds same sign.</li>
-    <li>Full-data end: <span class="neg mono">Δ = −0.048 … −0.064</span>, 95% CI excludes 0 — TF-IDF wins, significantly.</li>
+    <li>Full-data end: <span class="neg mono">Δ = −0.045 … −0.064</span> (SVM), 95% CI excludes 0 — TF-IDF wins, significantly.</li>
   </ul>
   <aside class="notes">
     <h4>1:15–2:30 · 核心图（75 秒，全场最慢的一页）</h4>
     <p class="zh">左图讲整体、右图讲小样本。先讲"教科书预期"，再讲"测到什么"，最后报数字。手要指图。"Read the gap, not the levels."</p>
-    <p>“Here is the honest curve. The textbook says pretrained features should shine at small n. At n equals twenty, everything is at chance — zero point five one — so there is no signal to harvest. From fifty on, the gap goes negative and never comes back; at full data, TF-IDF beats every embedding by five to six AUROC points, interval away from zero, ten seeds out of ten. <b>This is not a failed experiment — it localizes where pretrained features do NOT pay.</b>”</p>
+    <p>“Here is the honest curve. The textbook says pretrained features should shine at small n. At n equals twenty, everything is at chance — zero point five one — so there is no signal to harvest. From fifty on, the gap goes negative and never comes back; at full data, TF-IDF beats every embedding by five AUROC points or more, interval away from zero, ten seeds out of ten. <b>This is not a failed experiment — it localizes where pretrained features do NOT pay.</b>”</p>
   </aside>
 </section>
 
@@ -150,6 +151,7 @@
       <h3>Why TF-IDF wins here</h3>
       <ul>
         <li>One narrow domain: <span class="mono">“therefore”</span>, <span class="mono">“=”</span>, LaTeX fragments carry the signal — semantic-similarity embeddings smooth over exactly those tokens.</li>
+        <li>Step-level correctness is a <b>narrow task</b>: char n-grams are already a strong baseline. Embeddings pay exactly where word overlap stops working — <b>across datasets</b> (next slide).</li>
         <li>632k training steps is <b>plenty</b> for sparse features; “small data” is not this task’s bottleneck.</li>
         <li>Embeddings were pretrained for <b>meaning</b>, not for <b>correctness</b> — objective mismatch.</li>
       </ul>
@@ -167,6 +169,7 @@
     <h4>2:30–3:20 · 解剖 + 处理（50 秒）——"怎么处理的"全在这页</h4>
     <p class="zh">左栏是"为什么数据不好看"的科学解释，右栏是"我们怎么处理"。bug 故事要坦然讲，这是诚实分。强调：两个"看着不对"的数字，一个是我们的错，一个是真发现。</p>
     <p>“Why does the baseline win? This is one narrow domain — the signal lives in tokens like ‘therefore’ and equals signs, and similarity-trained embeddings blur exactly those. And with six hundred thousand steps, sparse features are not starving. Two numbers on the way here looked wrong. The first was our fault: our label construction kept only chosen completions — ninety-nine point eight percent positive. The metrics degenerated, we caught it, and re-ran everything. The second wrong-looking number — the negative gap — survived every check we could throw at it. So we report it.”</p>
+    <p class="zh">预演必问 “in-domain 为什么 TF-IDF 反而赢”：步级对错判断是窄任务，字符 n-gram 基线本来就很强；词向量的优势在词面重叠失效时（跨数据集）才体现——下一页就是证据。</p>
   </aside>
 </section>
 
@@ -216,7 +219,7 @@
   <h2>Backup — numbers for Q&amp;A <span class="tag">not timed</span></h2>
   <table class="num">
     <tr><th>axis θ</th><th>comparison</th><th>Δ / value</th><th>95% CI</th><th>read</th></tr>
-    <tr><td>n (in-domain)</td><td>embed − TF-IDF, full data</td><td class="neg">−0.048 … −0.064</td><td>excl. 0</td><td>TF-IDF wins, significant</td></tr>
+    <tr><td>n (in-domain)</td><td>embed − TF-IDF, full data</td><td class="neg">−0.045 … −0.064 (SVM)</td><td>excl. 0</td><td>TF-IDF wins, significant</td></tr>
     <tr><td>n = 20</td><td>all features</td><td>≈ 0.51 AUROC</td><td>—</td><td>near random</td></tr>
     <tr><td>shift MATH→GSM8K</td><td>bge-large − TF-IDF</td><td class="pos">+0.020</td><td>[0.018, 0.021]</td><td>sign flips</td></tr>
     <tr><td>shift</td><td>bge-base − TF-IDF</td><td class="pos">+0.006</td><td>[0.004, 0.008]</td><td>size gradient</td></tr>
@@ -226,9 +229,11 @@
     <tr><td>E6 predictor</td><td>Spearman ρ</td><td>0.90 (n = 4)</td><td>—</td><td>preliminary</td></tr>
   </table>
   <ul style="margin-top:2vh">
+    <li class="sub">Likely Q: “Why does TF-IDF win in-domain?” — step-level correctness is a narrow task and char n-grams are already a strong baseline; the embedding advantage appears exactly where word overlap stops working — across datasets (+0.020).</li>
     <li class="sub">Likely Q: “Why not split randomly?” — steps of one problem share wording; random split leaks → inflated metrics. We grouped by problem.</li>
     <li class="sub">Likely Q: “Why is AUROC not higher overall?” — step-level correctness is genuinely hard; we report Δ between feature sources, not absolute skill.</li>
     <li class="sub">Likely Q: “Composite shift?” — dataset, problem type and label source all change MATH→GSM8K; we report it as a compound shift, no single-factor claim.</li>
+    <li class="sub">AI use (§4.8): language polishing &amp; code debugging only; design, data, results and conclusions by the group, independently verified.</li>
   </ul>
   <aside class="notes">
     <h4>Q&amp;A 备用页（不计时）</h4>
