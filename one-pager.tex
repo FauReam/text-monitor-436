@@ -1,0 +1,67 @@
+\documentclass[10pt]{article}
+\usepackage[margin=0.55in]{geometry}
+\usepackage{enumitem}
+\usepackage{amsmath}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\pagestyle{empty}
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{2pt}
+\newcommand{\head}[1]{\vspace{4pt}\textbf{\small #1}\par}
+
+\begin{document}
+
+\begin{center}
+{\large \textbf{Can a Cheap Text Monitor Tell Right from Wrong Reasoning?}}\\[2pt]
+{\small CSI 436/536 Machine Learning (Fall 2026) --- Project P Midterm One-Pager \quad
+Group: [members] \quad Oct 20, 2026}
+\end{center}
+\vspace{-4pt}
+
+\head{Research question (fixed by the project).}
+Do pretrained representations improve downstream ML tasks, particularly under limited training data?
+We turn the yes/no question into a measurement problem. With the class algorithm $g$ and training data fixed,
+the \emph{only} varied factor is the feature source $\varphi$, and we report the gap function
+\[
+\Delta(\theta) \;=\; L_{\text{test}}\big(g \circ \varphi_{\text{simple}};\, \theta\big) \;-\; L_{\text{test}}\big(g \circ \varphi_{\text{pretrained}};\, \theta\big),
+\qquad \theta = (\text{train size } n,\ \text{distribution shift},\ \text{perturbation}).
+\]
+Deliverable: a measurement report --- one summary sentence (yes/no with effect size and CI) plus three boundary curves $\Delta(n)$, $\Delta(\text{shift})$, $\Delta(\text{noise})$.
+
+\head{Task and data (application carrier).}
+A cheap \emph{text monitor} for math reasoning: given a problem and one solution step (text only), classify the step as correct or incorrect.
+\textbf{PRM800K} (OpenAI, MIT license): human-labeled step-level correctness on MATH solutions ($\sim$800k labels).
+\textbf{Math-Shepherd} (GSM8K, automatically labeled): transfer test set only.
+Perturbed variants (rule-based typos, number formatting, LaTeX style): robustness test sets. Labels come with the datasets; no LLM labeling is used.
+
+\head{Method (strictly within the rules).}
+Pretrained text embeddings --- \texttt{all-MiniLM-L6-v2}, \texttt{bge-base}, \texttt{bge-large} --- are used \emph{frozen} as feature extractors only (forward pass, no fine-tuning).
+On top we train only models covered in class: logistic regression (L7) and linear SVM (L11).
+Control arm: TF-IDF (word / char n-grams) with the same classifiers.
+Protocol: input = problem + current step; \textbf{group split by problem} (no step of one problem crosses train/test, preventing leakage);
+primary metrics \textbf{balanced accuracy / AUROC} (labels are imbalanced; no raw accuracy);
+10 stratified re-samples per $n$, mean $\pm$ CI; $C$ selected by grouped $k$-fold CV inside the training set only; the test set is touched once; all seeds fixed.
+
+\head{Experiments.}
+\textbf{E1} learning curves $\Delta(n)$, $n \in \{20, 50, 100, 500, 2000, \text{full}\}$ (sample efficiency);
+\textbf{E3} generalization $\Delta(\text{shift})$: train on PRM800K (MATH) $\to$ test on Math-Shepherd (GSM8K) --- reported as a \emph{compound} shift (problem type, source, and labeling method change together; no single-factor attribution), plus train/test gap;
+\textbf{E4} robustness $\Delta(\text{noise})$: AUROC degradation under rule-based perturbations;
+\textbf{E2} three embedding models (novelty axis); \textbf{E5/E6} optional (abstention via Chow's rule; a preliminary predictability probe).
+
+\head{Pre-registered predictions (locked Oct 19, before any runs).}
+(1) $\mathrm{gap}(n)$ peaks in the small-sample region ($n \le 100$) and stays non-negative;
+(2) $\Delta(\text{shift})$ remains positive;
+(3) embedding degradation under perturbation is no larger than TF-IDF's.
+Falsified predictions will be reported as boundary findings, not hidden.
+
+\head{Current progress.}
+Full pipeline implemented and smoke-tested (data prep $\to$ features $\to$ grouped CV $\to$ evaluation $\to$ figures; SST-2 bring-up passed).
+A first run on PRM800K exposed a \emph{label-construction bug on our side}: using only the \texttt{chosen} completion per step yielded a 99.8\% positive label rate and degenerate metrics.
+We fixed it to use all human-rated completions and are re-running; all current numbers are preliminary.
+Encouragingly, the ranking-based signal was unaffected by the bug: at small $n$ the embedding--TF-IDF gap is consistently positive (e.g., $+0.03$ AUROC at $n{=}50$, MiniLM, preliminary).
+
+\head{Challenges and plans.}
+Class imbalance (stratified sampling + balanced metrics); compound-shift attribution; honest reporting if pre-registration is falsified.
+Next: finish E1 (top priority) $\to$ E3 $\to$ E4 $\to$ E2 on the corrected dataset; final talk will show $\Delta(n)$, $\Delta(\text{shift})$, $\Delta(\text{noise})$.
+
+\end{document}
