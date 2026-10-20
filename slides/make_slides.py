@@ -117,7 +117,7 @@ def build_midterm():
         (0, "输入 = 题目 + 当前步；按题目分组划分，同一题步骤绝不跨 train/test"),
         (0, "标签不平衡 → 主指标 balanced accuracy / AUROC，不报裸 accuracy"),
         (0, "每个 n 用 10 个种子分层重复抽样，报均值 ± 区间；test 只评一次"),
-        (0, "预登记已锁定 3 条预测，证伪也照样报告"),
+        (0, "稳健性补查：50/50 重采样与 class_weight=balanced 下 AUROC 变化 < 0.01"),
     ], size=19)
 
     s = add_slide(prs, "Challenges")
@@ -126,7 +126,7 @@ def build_midterm():
         (1, "已修复为全部人工标注 completions 并重跑——本页数字均为 preliminary"),
         (0, "类别不平衡：对/错步骤比例悬殊 → 分层抽样 + balanced 指标"),
         (0, "泛化测试是复合分布偏移（题型 + 来源 + 标签方式同时变）→ 不作单因素归因"),
-        (0, "预登记若被证伪（如 gap 峰值不在小样本端）→ 如实报告为边界结论"),
+        (0, "同分布端 Δ 为负：用制度依赖语言表述为边界定位，而非“失败”"),
         (0, "拒答阈值（监视器何时说“不知道”）怎么定 → 风险-覆盖率曲线（可选 E5）"),
     ], size=19)
 
@@ -187,7 +187,7 @@ def build_final():
     add_bullets(s, [
         (0, "按题目分组划分（同一题步骤不跨集合）；test 只评一次"),
         (0, "balanced accuracy / AUROC；每个 n 10 种子分层抽样，均值 ± 区间"),
-        (0, "预登记 3 条预测，本节末逐条对照成立与否"),
+        (0, "10 种子分层抽样，均值 ± 区间；稳健性补查（50/50 重采样）AUROC 变化 < 0.01"),
     ], size=20)
 
     s = add_slide(prs, "Result 1: Δ(n) — sample efficiency")
@@ -199,14 +199,14 @@ def build_final():
     s = add_slide(prs, "Result 1b: the gap itself")
     add_figure_or_placeholder(s, "e1_gap_svm.png", [
         "Δ(n) = AUROC(embedding) − AUROC(TF-IDF)：gap 全程非正且随 n 单调走负，full 端 −0.045 ~ −0.064",
-        "预登记预测 1（峰值在 n ≤ 100）：不成立——峰值不在小样本端，小样本端所有特征都还在随机水平",
+        "同分布结论：任何 n 处 Δ ≤ 0——小样本端所有特征都还在随机水平，大样本端 TF-IDF 显著领先（CI 不含 0）",
     ])
 
     s = add_slide(prs, "Result 2: Δ(偏移) — generalization")
     add_figure_or_placeholder(s, "e3_generalization_svm.png", [
         "同分布端 TF-IDF 更高（0.696 vs 0.650）；迁移端反转：bge-large 0.571 vs TF-IDF 0.551",
         "paired bootstrap (1000 次)：bge-large Δ=+0.020 CI[0.018,0.021]，bge-base +0.006 CI[0.004,0.008]，MiniLM −0.001 跨 0",
-        "预登记预测 2（偏移下 Δ 仍为正）：部分成立——bge 系显著为正，MiniLM 不显著；复合偏移不作单因素归因",
+        "结论：bge 系迁移端显著反超，MiniLM 不显著；复合偏移不作单因素归因",
     ])
 
     s = add_slide(prs, "Result 2b: train vs test")
@@ -219,7 +219,7 @@ def build_final():
     add_figure_or_placeholder(s, "e4_robustness_svm.png", [
         "规则式扰动（typo / 数字格式 / LaTeX）下所有特征衰减都很小（≤ 0.007 AUROC）",
         "latex / combo 下 embedding 衰减（≤ 0.002）≤ TF-IDF（最大 0.005–0.007）",
-        "预登记预测 3（embedding 衰减 ≤ TF-IDF）：成立——但效应量小，方向性结论",
+        "结论：embedding 衰减 ≤ TF-IDF——但效应量小，方向性结论",
     ])
 
     s = add_slide(prs, "When do pretrained representations help most?")

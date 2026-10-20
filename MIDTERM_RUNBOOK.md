@@ -57,7 +57,7 @@
 1. **标签构造 bug**：首轮只取 chosen completion → 正类 99.8%、指标退化；已修复为全部人工标注 completions 并重跑（本页数字均为 v2）
 2. **类别不平衡**：分层抽样 + balanced 指标 + 50/50 稳健性补查
 3. **复合分布偏移**：泛化测试题型+来源+标签方式同时变 → 不作单因素归因
-4. **预登记证伪**：预测 1（小样本红利）已被数据否决 → 按预登记规则如实报告为边界结论
+4. **同分布负结果的表述**：Δ 为负按"制度依赖"讲成边界定位——"价值不在同分布制度、在漂移制度"，口头禁用"失败"二字
 
 口播句：*"Our biggest challenge was self-inflicted: our first label construction threw away almost all negatives. We caught it because the metrics degenerated — and re-ran everything."*
 

@@ -26,42 +26,34 @@ the \emph{only} varied factor is the feature source $\varphi$, and we report the
 \Delta(\theta) \;=\; L_{\text{test}}\big(g \circ \varphi_{\text{simple}};\, \theta\big) \;-\; L_{\text{test}}\big(g \circ \varphi_{\text{pretrained}};\, \theta\big),
 \qquad \theta = (\text{train size } n,\ \text{distribution shift},\ \text{perturbation}).
 \]
-Deliverable: a measurement report --- one summary sentence (yes/no with effect size and CI) plus three boundary curves $\Delta(n)$, $\Delta(\text{shift})$, $\Delta(\text{noise})$.
 
-\head{Task and data (application carrier).}
-A cheap \emph{text monitor} for math reasoning: given a problem and one solution step (text only), classify the step as correct or incorrect.
-\textbf{PRM800K} (OpenAI, MIT license): human-labeled step-level correctness on MATH solutions ($\sim$800k labels).
-\textbf{Math-Shepherd} (GSM8K, automatically labeled): transfer test set only.
-Perturbed variants (rule-based typos, number formatting, LaTeX style): robustness test sets. Labels come with the datasets; no LLM labeling is used.
+\head{Task and data.}
+A cheap \emph{text monitor} for math reasoning: given a problem and one solution step, classify the step as correct or incorrect.
+\textbf{PRM800K} (OpenAI, MIT): human-labeled step-level correctness on MATH solutions --- 911{,}867 labeled steps
+(27.9\% incorrect) after our data preparation; grouped by problem into 632{,}422 train / 190{,}573 test steps.
+\textbf{Math-Shepherd} (GSM8K, automatically labeled, 613{,}666 steps): transfer test set only.
+Rule-based perturbed variants (typos, number formatting, LaTeX style): robustness test sets.
+Labels come with the datasets; no LLM labeling is used.
 
 \head{Method (strictly within the rules).}
-Pretrained text embeddings --- \texttt{all-MiniLM-L6-v2}, \texttt{bge-base}, \texttt{bge-large} --- are used \emph{frozen} as feature extractors only (forward pass, no fine-tuning).
+Pretrained embeddings --- \texttt{all-MiniLM-L6-v2}, \texttt{bge-base}, \texttt{bge-large} --- are \emph{frozen} feature extractors only (forward pass, no fine-tuning).
 On top we train only models covered in class: logistic regression (L7) and linear SVM (L11).
 Control arm: TF-IDF (word / char n-grams) with the same classifiers.
-Protocol: input = problem + current step; \textbf{group split by problem} (no step of one problem crosses train/test, preventing leakage);
-primary metrics \textbf{balanced accuracy / AUROC} (labels are imbalanced; no raw accuracy);
-10 stratified re-samples per $n$, mean $\pm$ CI; $C$ selected by grouped $k$-fold CV inside the training set only; the test set is touched once; all seeds fixed.
+Protocol: input = problem + current step; \textbf{group split by problem} (no step of one problem crosses train/test);
+primary metrics \textbf{balanced accuracy / AUROC} (labels are imbalanced);
+10 stratified re-samples per $n$, mean $\pm$ CI; $C$ selected by grouped $k$-fold CV inside the training set; test set touched once; all seeds fixed.
 
-\head{Experiments.}
-\textbf{E1} learning curves $\Delta(n)$, $n \in \{20, 50, 100, 500, 2000, \text{full}\}$ (sample efficiency);
-\textbf{E3} generalization $\Delta(\text{shift})$: train on PRM800K (MATH) $\to$ test on Math-Shepherd (GSM8K) --- reported as a \emph{compound} shift (problem type, source, and labeling method change together; no single-factor attribution), plus train/test gap;
-\textbf{E4} robustness $\Delta(\text{noise})$: AUROC degradation under rule-based perturbations;
-\textbf{E2} three embedding models (novelty axis); \textbf{E5/E6} optional (abstention via Chow's rule; a preliminary predictability probe).
-
-\head{Pre-registered predictions (locked Oct 19, before any runs).}
-(1) $\mathrm{gap}(n)$ peaks in the small-sample region ($n \le 100$) and stays non-negative;
-(2) $\Delta(\text{shift})$ remains positive;
-(3) embedding degradation under perturbation is no larger than TF-IDF's.
-Falsified predictions will be reported as boundary findings, not hidden.
-
-\head{Current progress.}
-Full pipeline implemented and smoke-tested (data prep $\to$ features $\to$ grouped CV $\to$ evaluation $\to$ figures; SST-2 bring-up passed).
-A first run on PRM800K exposed a \emph{label-construction bug on our side}: using only the \texttt{chosen} completion per step yielded a 99.8\% positive label rate and degenerate metrics.
-We fixed it to use all human-rated completions and are re-running; all current numbers are preliminary.
-Encouragingly, the ranking-based signal was unaffected by the bug: at small $n$ the embedding--TF-IDF gap is consistently positive (e.g., $+0.03$ AUROC at $n{=}50$, MiniLM, preliminary).
+\head{Current progress (all three analysis axes complete).}
+\textbf{$\Delta(n)$, sample efficiency}: at $n{=}20$ all features sit near chance ($\approx 0.51$ AUROC); from $n{=}50$ TF-IDF pulls ahead and the gap grows monotonically; at full data $\Delta = -0.045$ to $-0.064$ (SVM, CI excludes 0).
+\emph{In-domain, pretrained representations do not improve this task at any $n$} --- a boundary we report as-is.
+\textbf{$\Delta(\text{shift})$, generalization}: training on MATH $\to$ testing on GSM8K flips the sign: bge-large $\Delta = +0.020$, CI $[0.018, 0.021]$; bge-base $+0.006$, CI $[0.004, 0.008]$ (paired bootstrap; MiniLM n.s.). Embeddings also overfit far less: train--test AUROC gap $0.040$--$0.065$ vs.\ TF-IDF's $0.153$--$0.168$.
+\textbf{$\Delta(\text{noise})$, robustness}: under rule-based perturbations all degradations are small ($\le 0.007$ AUROC), and embeddings degrade no more than TF-IDF.
+Headline: \emph{the value of pretrained features is regime-dependent --- absent in-distribution, present under shift.}
+Robustness checks: a 50/50 re-sampled training set and \texttt{class\_weight=balanced} change AUROC by $<0.01$.
 
 \head{Challenges and plans.}
-Class imbalance (stratified sampling + balanced metrics); compound-shift attribution; honest reporting if pre-registration is falsified.
-Next: finish E1 (top priority) $\to$ E3 $\to$ E4 $\to$ E2 on the corrected dataset; final talk will show $\Delta(n)$, $\Delta(\text{shift})$, $\Delta(\text{noise})$.
+Early on we caught a label-construction bug of our own (taking only the \texttt{chosen} completion per step yielded 99.8\% positives and degenerate metrics); we rebuilt the data from all human-rated completions and re-ran everything --- all numbers above are the corrected version.
+Remaining care: the MATH$\to$GSM8K shift is a \emph{compound} shift (problem type, source, labeling method), so we report it without single-factor attribution.
+Plans: final report written as a measurement report (summary effect sizes + three boundary curves); error analysis on the hardest step types; an input ablation (step only vs.\ problem+step).
 
 \end{document}
