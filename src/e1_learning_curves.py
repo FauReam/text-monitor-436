@@ -30,6 +30,9 @@ def main():
                     help="n=全量时用的种子数（全量无抽样随机性，可用 1；默认同 n-seeds）")
     ap.add_argument("--out-suffix", default="",
                     help="结果文件名后缀，便于按特征并行跑后合并")
+    ap.add_argument("--input-mode", default="problem+step",
+                    choices=["problem+step", "step+problem", "step"],
+                    help="输入构造；step-only 曲线用 step（特征缓存复用，分钟级出图）")
     ap.add_argument("--seed", type=int, default=0)
     ap.add_argument("--quick", action="store_true",
                     help="冒烟测试：只跑 tfidf-word + 一个 embedding，n 只到 100，2 种子")
@@ -62,8 +65,9 @@ def main():
                         from metrics import compute_metrics, scores_of
                         from protocol import fit_full_cached
                         fz, clf, info = fit_full_cached(
-                            feat, clf_name, trainval, seed=a.seed * 1000 + s)
-                        Xte = fz.transform(input_texts(test_df))
+                            feat, clf_name, trainval, seed=a.seed * 1000 + s,
+                            input_mode=a.input_mode)
+                        Xte = fz.transform(input_texts(test_df, a.input_mode))
                         r = {"C": info["C"], "train": info["train"],
                              "test": compute_metrics(
                                  test_df["label"].to_numpy(),
@@ -73,7 +77,8 @@ def main():
                         sub = subsample_stratified(trainval, n,
                                                    seed=a.seed * 1000 + s)
                         r = fit_and_eval(clf_name, Featurizer(feat), sub,
-                                         test_df, seed=a.seed * 1000 + s)
+                                         test_df, seed=a.seed * 1000 + s,
+                                         input_mode=a.input_mode)
                         sub_n = len(sub)
                     runs.append({
                         "seed": a.seed * 1000 + s, "n": sub_n, "C": r["C"],

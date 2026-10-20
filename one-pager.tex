@@ -26,11 +26,12 @@ the \emph{only} varied factor is the feature source $\varphi$, and we report the
 \Delta(\theta) \;=\; L_{\text{test}}\big(g \circ \varphi_{\text{simple}};\, \theta\big) \;-\; L_{\text{test}}\big(g \circ \varphi_{\text{pretrained}};\, \theta\big),
 \qquad \theta = (\text{train size } n,\ \text{shift},\ \text{perturbation},\ \text{input construction}).
 \]
+All reported $\Delta$ values are AUROC differences (embedding $-$ TF-IDF), i.e.\ $L = 1 - \mathrm{AUROC}$ in the formula above: $\Delta > 0$ favors pretrained features.
 
 \head{Task and data.}
 A cheap \emph{text monitor} for math reasoning: given a problem and one solution step, classify the step as correct or incorrect.
 \textbf{PRM800K} (OpenAI, MIT): human-labeled step-level correctness on MATH solutions --- 911{,}867 labeled steps
-(27.9\% incorrect) after our data preparation; grouped by problem into 632{,}422 train / 190{,}573 test steps.
+(27.9\% incorrect) after our data preparation; grouped by problem into 632{,}422 train / 88{,}872 val (reserved, unused this round) / 190{,}573 test steps.
 \textbf{Math-Shepherd} (GSM8K, automatically labeled, 613{,}666 steps): transfer test set only.
 Rule-based perturbed variants (typos, number formatting, LaTeX style): robustness test sets.
 Labels come with the datasets; no LLM labeling is used.
@@ -44,8 +45,8 @@ primary metrics \textbf{balanced accuracy / AUROC} (labels are imbalanced);
 10 stratified re-samples per $n$, mean $\pm$ CI; $C$ selected by grouped $k$-fold CV inside the training set; test set touched once; all seeds fixed.
 
 \head{Current progress (three axes complete + reviewer-driven input ablation).}
-\textbf{$\Delta(n)$, sample efficiency} (input = problem + step): at $n{=}20$ all features sit near chance ($\approx 0.51$ AUROC); from $n{=}50$ TF-IDF pulls ahead monotonically; at full data $\Delta = -0.045$ to $-0.064$ (SVM, CI excludes 0) --- apparently no in-domain benefit at any $n$.
-\textbf{E7 input ablation} (reviewer question: features, or input?): truncation is real but tiny (median input 89 tokens; MiniLM truncates 1.6\% of rows, bge 0.04\%); the dominant factor is \emph{dilution} --- dropping the problem text (step-only) lifts embeddings by $+0.030$--$+0.061$ vs.\ only $+0.012$--$+0.016$ for TF-IDF, and step-only bge-large ($0.711$) draws level with TF-IDF ($0.708$). \emph{The in-domain negative $\Delta$ is mostly an input-construction artifact.}
+\textbf{$\Delta(n)$, sample efficiency} (problem+step input): at $n{=}20$ all features sit near chance ($\approx 0.51$ AUROC); from $n{=}50$ TF-IDF pulls ahead monotonically; at full data $\Delta = -0.045$ to $-0.064$ (SVM, CI excludes 0) --- no in-domain benefit \emph{in this input construction}.
+\textbf{E7 input ablation} (reviewer question: features, or input?): truncation is real but tiny (median input 89 tokens; MiniLM truncates 1.6\% of rows, bge 0.04\%). Dropping the problem text (step-only) lifts embeddings by $+0.030$--$+0.061$ vs.\ only $+0.012$--$+0.016$ for TF-IDF --- \emph{the problem text hurts embeddings far more than TF-IDF}, consistent with pooling dilution (not yet isolated as the sole mechanism). Step-only bge-large ($0.711$) draws level with TF-IDF ($0.708$; point estimate from the full-data run, CI to follow). \emph{The in-domain negative $\Delta$ is mostly an input-construction effect, not a feature property.}
 \textbf{$\Delta(\text{shift})$, generalization}: with step-only input the transfer gain triples --- bge-large $\Delta = +0.069$, CI $[0.067, 0.071]$; bge-base $+0.049$; MiniLM $+0.030$ (all significant, paired bootstrap; original construction gave bge-large $+0.020$). Removing the problem text \emph{hurts} TF-IDF transfer ($0.551 \to 0.527$); embeddings also overfit far less (train--test gap $0.040$--$0.065$ vs.\ $0.153$--$0.168$).
 \textbf{$\Delta(\text{noise})$, robustness}: under rule-based perturbations all degradations are small ($\le 0.007$ AUROC), embeddings no worse than TF-IDF.
 Headline: \emph{the value of pretrained features is conditional on input construction --- and largest under distribution shift.}
@@ -54,7 +55,7 @@ Robustness checks: 50/50 re-sampling and \texttt{class\_weight=balanced} change 
 \head{Challenges and plans.}
 We caught our own label-construction bug early (chosen-only completions, 99.8\% positives, degenerate metrics); everything above is the corrected re-run.
 The MATH$\to$GSM8K shift is a \emph{compound} shift (problem type, source, labeling method) --- reported without single-factor attribution; a decomposition is planned.
-Open question: why does step-only input help at all (PRM800K steps may carry context)? Plans: that analysis, single-factor shift decomposition, and a final measurement report (effect sizes + three boundary curves, both input constructions).
+Cheapest mechanism check next: encode problem and step \emph{separately} and concatenate --- keeps context, avoids pooling dilution. Also next: a step-only $\Delta(n)$ curve and the step-only in-domain CI (cached features make both cheap), single-factor shift decomposition, and a final measurement report (effect sizes + three boundary curves, both input constructions).
 
 \head{AI use disclosure (per syllabus \S4.8).}
 The implementation code was written by AI assistants under our direction (also used for language polishing). The research framing, experimental design, data checking, and ablation design were carried out by the group; we have read all of the code and can explain every part of it.

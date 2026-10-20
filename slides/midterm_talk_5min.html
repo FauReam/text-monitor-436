@@ -100,7 +100,7 @@
   <ul>
     <li><b>Background.</b> Verifying LLM reasoning step-by-step costs GPT-level calls or human labels — a <b>cheap text-only monitor</b> decides: is this step correct?</li>
     <li><b>Problem setup.</b> <span class="mono">Δ(θ) = AUROC(pretrained) − AUROC(TF-IDF)</span> over regimes θ = (train size n, distribution shift, perturbation — plus an input-construction ablation). <b>The only variable is where features come from.</b></li>
-    <li><b>Data.</b> PRM800K (OpenAI, MIT license): <b>911,867</b> human-labeled steps, <b>27.9%</b> incorrect; split <b>grouped by problem</b> — 632,422 train / 190,573 test.</li>
+    <li><b>Data.</b> PRM800K (OpenAI, MIT license): <b>911,867</b> human-labeled steps, <b>27.9%</b> incorrect; split <b>grouped by problem</b> — 632,422 train / 88,872 val (unused) / 190,573 test.</li>
     <li><b>Methods.</b> Frozen MiniLM / bge-base / bge-large as feature extractors only; downstream = in-class <b>logistic regression &amp; linear SVM</b>; baseline = word+char TF-IDF.</li>
     <li><b>Metrics.</b> Balanced accuracy / AUROC (never raw accuracy); 10 stratified seeds; grouped CV inside train; <b>test touched once</b>.</li>
   </ul>
@@ -108,7 +108,7 @@
     <h4>0:15–0:45 · 演讲词（约 95 词 / 30 秒，语速稍快）</h4>
     <p>“First, sixty seconds of everything required. Verifying a language model’s reasoning step by step is expensive, so we built a cheap monitor that reads one math step and judges it right or wrong. We measure the gap between pretrained features and TF-IDF across three regimes, plus an input ablation — and the only thing we vary is where the features come from. The data is PRM800K, nine hundred eleven thousand human-labeled steps, twenty-eight percent wrong, split grouped by problem. The learners are frozen embeddings plus logistic regression and linear SVM, against TF-IDF. Every metric is balanced, over ten seeds, test set touched once.”</p>
     <h4>技术解释（理解 + Q&amp;A）</h4>
-    <p class="zh">便宜监视器：输入=题目+当前步文字（主设定），输出=对/错，替代昂贵的 GPT 级逐步查错或人工标注。“only variable”是 Soundness 核心——分类器/数据/协议全固定，唯一变的是特征来源。grouped by problem：同一道题的多条步骤文字高度相似，按步骤随机分=泄漏、指标虚高；按题分（train 632,422 / test 190,573）。balanced 指标：错例仅 27.9%，裸 accuracy 误导。10 种子分层抽样报均值±区间；C 只在训练集内 grouped CV 选；test 只评一次。数字要念准：911,867 / 27.9% / grouped by problem。</p>
+    <p class="zh">便宜监视器：输入=题目+当前步文字（主设定），输出=对/错，替代昂贵的 GPT 级逐步查错或人工标注。“only variable”是 Soundness 核心——分类器/数据/协议全固定，唯一变的是特征来源。grouped by problem：同一道题的多条步骤文字高度相似，按步骤随机分=泄漏、指标虚高；按题分（train 632,422 / val 88,872 预留未用 / test 190,573，合计 911,867）。balanced 指标：错例仅 27.9%，裸 accuracy 误导。10 种子分层抽样报均值±区间；C 只在训练集内 grouped CV 选；test 只评一次。数字要念准：911,867 / 27.9% / grouped by problem。</p>
   </aside>
 </section>
 
@@ -167,8 +167,8 @@
       <ul>
         <li><b>Truncation</b> — median input 89 tokens; MiniLM truncates 1.6% of rows (0.6% lose the whole step), bge 0.04%. Real, but far too small.</li>
         <li><b>Position</b> — moving the step first: embeddings <span class="pos">+0.015…+0.026</span>, TF-IDF ≈ 0.</li>
-        <li><b>Dilution</b> — dropping the problem text: embeddings <span class="pos">+0.03…+0.06</span>, TF-IDF only +0.012…0.016. The problem dominated the pooling.</li>
-        <li><b>Verdict</b> — the in-domain negative Δ was mostly an <b>input-construction artifact</b>.</li>
+        <li><b>Dilution</b> — dropping the problem text: embeddings <span class="pos">+0.03…+0.06</span>, TF-IDF only +0.012…0.016. The problem text hurts embeddings far more than TF-IDF (consistent with pooling dilution).</li>
+        <li><b>Verdict</b> — the in-domain negative Δ was mostly an <b>input-construction effect, not a feature property</b>.</li>
       </ul>
     </div>
     <div class="col">
@@ -186,9 +186,9 @@
   <div class="takeaway">step-only: bge-large <b>0.711</b> draws level with TF-IDF <b>0.708</b> — Δ goes from −0.045 to ≈ 0 (point estimate).</div>
   <aside class="notes">
     <h4>2:30–3:20 · 演讲词（约 140 词 / 50 秒，语速稍快）</h4>
-    <p>“So — features, or input? Three suspects. First, truncation: our input puts the step at the tail of a long prompt, and MiniLM caps at two hundred fifty-six tokens. We measured it — the median input is eighty-nine tokens; MiniLM truncates one point six percent of rows, bge almost none. Real, but far too small. Second, position — moving the step to the front helps embeddings by up to two points, and TF-IDF not at all. Third, dilution — dropping the problem text entirely gives embeddings another three-plus points, and TF-IDF barely one. The problem was dominating the pooling. And here is the verdict — with step-only input, bge-large draws level with TF-IDF, zero point seven one one against zero point seven oh eight. The in-domain ‘no’ was mostly the input, not the features.”</p>
+    <p>“So — features, or input? Three suspects. First, truncation: our input puts the step at the tail of a long prompt, and MiniLM caps at two hundred fifty-six tokens. We measured it — the median input is eighty-nine tokens; MiniLM truncates one point six percent of rows, bge almost none. Real, but far too small. Second, position — moving the step to the front helps embeddings by up to two points, and TF-IDF not at all. Third, dilution — dropping the problem text gives embeddings another three-plus points, TF-IDF barely one: the problem text hurts embeddings far more, consistent with dilution in the pooling. And here is the verdict — with step-only input, bge-large draws level with TF-IDF, zero point seven one one against zero point seven oh eight. The in-domain ‘no’ was mostly the input, not the features.”</p>
     <h4>技术解释（理解 + Q&amp;A）</h4>
-    <p class="zh">三嫌犯逐一排除：截断（MiniLM 256 / bge 512 token 上限；中位 89、p99=291；MiniLM 1.6% 行被截、0.6% 整步丢失，bge 0.04%，Math-Shepherd≈0）量级不足；位置（step 前置 +0.015~0.026，只修位置/截断）；稀释（去题目再 +0.03 以上，主因——题目文本主导均值池化/CLS）。注意 +0.004 是点估计、无区间——口径只说“draws level / 追平”，不说“显著反超”。若被追问旧解释（窄任务/char n-gram 强）：那解释的是 TF-IDF 为何是强基线；E7 解释的是 embedding 为何被压低——两者并存，主因是稀释。</p>
+    <p class="zh">三嫌犯逐一排除：截断（MiniLM 256 / bge 512 token 上限；中位 89、p99=291；MiniLM 1.6% 行被截、0.6% 整步丢失，bge 0.04%，Math-Shepherd≈0）量级不足；位置（step 前置 +0.015~0.026，只修位置/截断）；稀释（去题目 embedding 再涨 +0.03~+0.06、TF-IDF 仅 +0.012~+0.016——与池化稀释一致，但机制未隔离：题目也可能只是对所有模型加了无关噪声；下一步最便宜的检验是题目、步骤分别编码再拼接，既留上下文又避免池化稀释）。注意 +0.004 是点估计、无区间——口径只说“draws level / 追平”，不说“显著反超”（CI 实验已备好，DGX 上跑）。若被追问旧解释（窄任务/char n-gram 强）：那解释的是 TF-IDF 为何是强基线；E7 解释的是 embedding 为何被压低——两者并存。</p>
   </aside>
 </section>
 
@@ -223,15 +223,16 @@
   <h2>Plans → final</h2>
   <ul>
     <li><b>Open question:</b> why does step-only input help at all? PRM800K steps may carry their own context — dig in.</li>
+    <li><b>Cheapest mechanism check:</b> encode problem and step separately, then concatenate — keeps context, avoids pooling dilution. Plus the step-only Δ(n) curve and in-domain CI (features cached, minutes).</li>
     <li><b>Single-factor decomposition</b> of the compound MATH→GSM8K shift (problem type / source / labeling).</li>
     <li><b>E6 (started):</b> predict downstream Δ from representation properties — ρ = 0.90 on 4 points (preliminary); final = three Δ curves under <b>both input constructions</b>, as a measurement report.</li>
   </ul>
   <div class="takeaway">We asked <i>whether</i> pretrained representations help. The answer survived a hostile review:<br><b>yes — if the input lets them speak, and loudest when the distribution drifts.</b></div>
   <aside class="notes">
     <h4>4:20–4:45 · 演讲词（约 72 词 / 25 秒）</h4>
-    <p>“For the final, we will dig into why step-only helps at all, decompose the compound shift into single factors, and grow E6, our predictor of the downstream gap from representation properties — the correlation is zero point nine on four points, still preliminary. We asked whether pretrained representations help. The answer survived a hostile review — yes, if the input lets them speak, and loudest when the distribution drifts. Thank you.”</p>
+    <p>“For the final, we will dig into why step-only helps at all, run the cheapest mechanism check — encode problem and step separately, then concatenate — plus the step-only delta curve with confidence intervals, decompose the compound shift into single factors, and grow E6, our predictor of the downstream gap — the correlation is zero point nine on four points, still preliminary. We asked whether pretrained representations help. The answer survived a hostile review — yes, if the input lets them speak, and loudest when the distribution drifts. Thank you.”</p>
     <h4>技术解释（理解 + Q&amp;A）</h4>
-    <p class="zh">E6：表征统计量（训练集散度等）预测实测 Δ，Spearman ρ=0.900、p=0.037、n=4 点——必须带 preliminary；期末扩“表征×制度”网格。期末交付：Δ(n)、Δ(偏移)、Δ(扰动) 三条曲线 × 两种输入构造，测量报告式。若被问 AUROC 绝对值：任务本身难，我们报 Δ 不报绝对水平。讲完停在 takeaway，4:45 为理想点。</p>
+    <p class="zh">E6：表征统计量（训练集散度等）预测实测 Δ，Spearman ρ=0.900、p=0.037、n=4 点——必须带 preliminary；期末扩“表征×制度”网格。期末交付：Δ(n)、Δ(偏移)、Δ(扰动) 三条曲线 × 两种输入构造，测量报告式。新增承诺：concat 检验 + step-only Δ(n)（n=50/500/全量起）+ step-only 同分布 CI（e7_indomain_step_ci.py 已就绪，缓存特征分钟级）。若被问 AUROC 绝对值：任务本身难，我们报 Δ 不报绝对水平。讲完停在 takeaway，4:45 为理想点。</p>
   </aside>
 </section>
 
@@ -241,7 +242,7 @@
   <table class="num">
     <tr><th>axis θ</th><th>comparison</th><th>Δ / value</th><th>95% CI</th><th>read</th></tr>
     <tr><td>n (in-domain, original input)</td><td>embed − TF-IDF, full data</td><td class="neg">−0.045 … −0.064 (SVM)</td><td>excl. 0</td><td>TF-IDF wins — but see E7</td></tr>
-    <tr><td>input ablation (E7)</td><td>bge-large: tail → first → only</td><td>0.651 → 0.677 → 0.711</td><td>—</td><td>dilution is the main cause</td></tr>
+    <tr><td>input ablation (E7)</td><td>bge-large: tail → first → only</td><td>0.651 → 0.677 → 0.711</td><td>—</td><td>consistent with dilution</td></tr>
     <tr><td>step-only, in-domain</td><td>bge-large vs TF-IDF(word)</td><td>0.711 vs 0.708 (Δ ≈ +0.004)</td><td>point est.</td><td>draws level</td></tr>
     <tr><td>truncation</td><td>share of rows truncated</td><td>MiniLM 1.6%, bge 0.04%</td><td>—</td><td>too small to explain the gap</td></tr>
     <tr><td>shift MATH→GSM8K (original)</td><td>bge-large − TF-IDF</td><td class="pos">+0.020</td><td>[0.018, 0.021]</td><td>sign flips</td></tr>
@@ -252,11 +253,13 @@
     <tr><td>E6 predictor</td><td>Spearman ρ</td><td>0.90 (n = 4)</td><td>—</td><td>preliminary</td></tr>
   </table>
   <ul style="margin-top:2vh">
-    <li class="sub">Likely Q: “Why did the first answer say no?” — the step sat at the tail of a long prompt; dilution of the embedding dominated (truncation was minor). Step-only closes the in-domain gap.</li>
+    <li class="sub">Likely Q: “Why did the first answer say no?” — the step sat at the tail of a long prompt; the problem text hurt embeddings far more than TF-IDF, consistent with pooling dilution (truncation was minor). Step-only closes the in-domain gap.</li>
     <li class="sub">Likely Q: “Is the in-domain tie significant?” — Δ ≈ +0.004 is a point estimate; we say “draws level”, not “wins”.</li>
     <li class="sub">Likely Q: “Why not split randomly?” — steps of one problem share wording; random split leaks → inflated metrics. We grouped by problem.</li>
     <li class="sub">Likely Q: “Why is AUROC not higher overall?” — step-level correctness is genuinely hard; we report Δ between feature sources, not absolute skill.</li>
     <li class="sub">Likely Q: “Composite shift?” — problem type, source and labeling all change MATH→GSM8K; reported as compound, single-factor decomposition planned.</li>
+    <li class="sub">Sign convention: Δ = AUROC(embedding) − AUROC(TF-IDF), i.e. L = 1 − AUROC; Δ &gt; 0 favors pretrained features.</li>
+    <li class="sub">Split audit: 911,867 = 632,422 train + 88,872 val (reserved, unused) + 190,573 test — grouped by problem.</li>
     <li class="sub">AI use (§4.8): implementation code written by AI assistants under our direction; experimental design, data checking and ablation design by the group — we have read all the code and can explain every part.</li>
   </ul>
   <aside class="notes">
