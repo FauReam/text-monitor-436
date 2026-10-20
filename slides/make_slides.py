@@ -87,7 +87,7 @@ def build_midterm():
     s = add_slide(prs, "Can a cheap text monitor tell right from wrong reasoning?")
     add_bullets(s, [
         (0, "CSI 436/536 Machine Learning · Project P · Midterm"),
-        (0, "Group members: [组员姓名]"),
+        (0, "Group members: Jiayu Liao; Zeyu Pan; Yuhan Sun"),
         (0, "一句话主题：便宜的文本分类器，能不能读懂数学推理步骤的对错？"),
         (0, "且按课程规定回答：预训练表征在其中到底多买了什么（Δ(θ) 测量报告）"),
     ], top=2.2, size=20)
@@ -167,7 +167,7 @@ def build_final():
 
     s = add_slide(prs, "预训练表征值多少：一个 Δ(θ) 测量报告")
     add_bullets(s, [
-        (0, "CSI 436/536 · Project P · Final · Group: [组员姓名]"),
+        (0, "CSI 436/536 · Project P · Final · Group: Jiayu Liao; Zeyu Pan; Yuhan Sun"),
         (0, "一句话结论（PRM800K，10 种子，SVM）：预训练表征的价值高度依赖评测制度"),
         (1, "同分布全量数据：Δ = −0.045 ~ −0.064 AUROC——预训练不提升，TF-IDF 反而更好（CI 不含 0）"),
         (1, "小样本端 n=20：所有特征 ≈ 0.51（近随机），预训练没有买到 sample efficiency"),
