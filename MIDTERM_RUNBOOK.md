@@ -4,9 +4,8 @@
 
 - one-pager.pdf：一页提交版。one-pager.tex 和 figures/ 是可编辑来源。
 - slides/midterm_talk_5min.html：7页主讲 + 2页Q&A，图表内嵌，离线打开可用。
-- slides/midterm_script.md：逐页英文朗读稿、中文技术解释和Q&A。英文约498词，分配4:45，预留15秒。时间是排练目标，尚未实测。
+- slides/midterm_script.md：逐页英文朗读稿、中文技术解释和Q&A。必讲英文409词（约3:20–3:30），总时长目标4:45以内、5:00硬上限。时间是排练目标，尚未实测。
 - slides/midterm_talk_5min.pdf：同内容备用版，第7页为主讲结束。
-- data-source.json：本轮制图所用原始JSON快照及SHA256，不代表重跑实验。
 
 HTML：方向键翻页，N显示讲稿，T启动/暂停计时，R重置，F全屏，End跳到主讲第7页。
 
