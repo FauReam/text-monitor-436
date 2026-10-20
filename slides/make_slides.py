@@ -169,9 +169,10 @@ def build_final():
     add_bullets(s, [
         (0, "CSI 436/536 · Project P · Final · Group: Jiayu Liao; Zeyu Pan; Yuhan Sun"),
         (0, "一句话结论（PRM800K，10 种子，SVM）：预训练表征的价值高度依赖评测制度"),
-        (1, "同分布全量数据：Δ = −0.045 ~ −0.064 AUROC——预训练不提升，TF-IDF 反而更好（CI 不含 0）"),
+        (1, "同分布全量数据（主设定）：Δ = −0.045 ~ −0.064 AUROC——预训练不提升，TF-IDF 反而更好（CI 不含 0）"),
+        (1, "但输入消融（E7）：step-only 输入下 bge-large 0.711 反超 TF-IDF 0.708——同分布负 Δ 大半是输入构造的产物"),
         (1, "小样本端 n=20：所有特征 ≈ 0.51（近随机），预训练没有买到 sample efficiency"),
-        (1, "分布偏移（MATH→GSM8K）：bge-large Δ = +0.020，CI[0.018, 0.021]，显著为正"),
+        (1, "分布偏移（MATH→GSM8K）：bge 系出现小幅但显著的收益，Δ = +0.006 ~ +0.020（CI 不含 0；MiniLM 不显著）"),
         (1, "规则扰动：embedding 衰减 ≤ TF-IDF，但所有衰减 ≤ 0.007 AUROC"),
     ], top=1.8, size=19)
 
@@ -179,6 +180,7 @@ def build_final():
     add_bullets(s, [
         (0, "课程固定问题：预训练表征是否提升下游任务？"),
         (0, "Δ(θ) = L_test(TF-IDF) − L_test(embedding)；θ = (n, 偏移, 扰动)"),
+        (1, "正文报 AUROC 差（embedding − TF-IDF），即 L = 1 − AUROC：Δ > 0 = 预训练更好，Δ < 0 = TF-IDF 更好"),
         (0, "唯一变量 = 特征来源；g = 逻辑回归 / 线性 SVM；全部冻结、无 fine-tune"),
         (0, "任务载体：数学推理步骤判对错（PRM800K 人工标签，错例占 27.9%）"),
     ], size=20)
@@ -202,11 +204,23 @@ def build_final():
         "同分布结论：任何 n 处 Δ ≤ 0——小样本端所有特征都还在随机水平，大样本端 TF-IDF 显著领先（CI 不含 0）",
     ])
 
+    s = add_slide(prs, "Result 1c: 输入构造消融（E7，评委意见驱动）")
+    add_bullets(s, [
+        (0, "隐患：输入 = 题目 + step（step 在尾部），MiniLM 上限 256 / bge 512 token"),
+        (1, "截断量化：输入中位 89 token；MiniLM 截断 1.64% 行，bge 仅 0.04% → 截断本身解释不了差距"),
+        (0, "E1 全量点 test AUROC（SVM）：problem+step → step-first → step-only"),
+        (1, "bge-large: 0.651 → 0.677 → 0.711（+0.061）；bge-base: 0.650 → 0.668 → 0.704"),
+        (1, "MiniLM: 0.631 → 0.647 → 0.681；TF-IDF(word): 0.696 → 0.694 → 0.708（仅 +0.012）"),
+        (0, "主因是题目文本对 embedding 池化的稀释（+0.05 量级），截断贡献很小"),
+        (0, "step-only 下 bge-large 反超 TF-IDF——同分布负 Δ 大半是输入构造的产物，非表征本身"),
+    ], size=19)
+
     s = add_slide(prs, "Result 2: Δ(偏移) — generalization")
     add_figure_or_placeholder(s, "e3_generalization_svm.png", [
         "同分布端 TF-IDF 更高（0.696 vs 0.650）；迁移端反转：bge-large 0.571 vs TF-IDF 0.551",
         "paired bootstrap (1000 次)：bge-large Δ=+0.020 CI[0.018,0.021]，bge-base +0.006 CI[0.004,0.008]，MiniLM −0.001 跨 0",
         "结论：bge 系迁移端显著反超，MiniLM 不显著；复合偏移不作单因素归因",
+        "step-only 输入下（E7 更优构造）：三者全部显著为正——bge-large +0.069 CI[0.067,0.071]，MiniLM 转正 +0.030",
     ])
 
     s = add_slide(prs, "Result 2b: train vs test")
@@ -226,8 +240,8 @@ def build_final():
     add_bullets(s, [
         (0, "量化答案 = 三条 gap 曲线的实测形态"),
         (1, "n 轴：Δ 最接近 0 处在 n=20（≈ 0，但大家都在随机水平）；随 n 增大走负，full 端 −0.045 ~ −0.064"),
-        (1, "偏移轴：bge-large Δ = +0.020（显著正）；扰动轴：衰减差 ≤ 0.005（embedding 略优）"),
-        (0, "一句话修正版：预训练特征不是在“数据少”时最值钱，而是在“分布会漂”时最值钱"),
+        (1, "偏移轴：bge 系 Δ = +0.006 ~ +0.020（小幅但显著）；扰动轴：衰减差 ≤ 0.005（embedding 略优）"),
+        (0, "一句话修正版：预训练特征的价值不在“数据少”的制度，而在“分布会漂”的制度（但幅度小）"),
         (0, "本任务同分布端收益为负 = 如实报告的边界结论"),
     ], size=20)
 
@@ -239,11 +253,13 @@ def build_final():
         (0, "E6 初步观察：训练集散度统计量与实测 Δ 同号，Spearman ρ=0.90（p=0.037，n=4），仅作 future work"),
     ], size=19)
 
-    s = add_slide(prs, "Limitations & honest boundaries")
+    s = add_slide(prs, "Challenges（主要已解决）& limitations")
     add_bullets(s, [
-        (0, "只覆盖静态错误识别；不研究对抗性躲避（需 RL，超出课程范围）"),
-        (0, "复合分布偏移不做单因素归因；小样本结论均带区间"),
-        (0, "Δ < 0 的同分布结论如实报告为边界；训练集天然 28/72 不平衡，补做 50/50 重采样稳健性检验（AUROC 变化 < 0.01）"),
+        (0, "挑战：为什么同分布下 TF-IDF 反而更好？—— 已被 E7 消融基本回答"),
+        (1, "截断量化：MiniLM 1.64% 行被截、bge 0.04%，量级不足；主因是题目文本对 embedding 的稀释"),
+        (1, "step-only 下 bge-large 0.711 反超 TF-IDF 0.708；残余问题：PRM800K 步骤可能自带上下文，step-only 为何反而更优值得深挖"),
+        (0, "训练集天然 28/72 不平衡：50/50 重采样与 class_weight 补查，AUROC 变化 < 0.01"),
+        (0, "只覆盖静态错误识别；不研究对抗性躲避（需 RL，超出课程范围）；复合偏移不作单因素归因"),
     ], size=20)
 
     s = add_slide(prs, "Requirement checklist")

@@ -22,6 +22,8 @@ def main():
     ap.add_argument("--transfer-dataset", default="mathshepherd")
     ap.add_argument("--features", nargs="*", default=FEATURES)
     ap.add_argument("--seed", type=int, default=0)
+    ap.add_argument("--input-mode", default="problem+step")
+    ap.add_argument("--out", default="e3_generalization.json")
     a = ap.parse_args()
     set_seed(a.seed)
 
@@ -36,15 +38,17 @@ def main():
         results[feat] = {}
         for clf_name in CLASSIFIERS:
             fz, clf, info = fit_full_cached(feat, clf_name, train_df,
-                                            seed=a.seed)
+                                            seed=a.seed,
+                                            input_mode=a.input_mode)
             # 同分布 test
             m_in = compute_metrics(test_in["label"].to_numpy(),
                                    scores_of(clf, fz.transform(
-                                       input_texts(test_in))))
+                                       input_texts(test_in, a.input_mode))))
             # 迁移 test：同一 featurizer（embedding 无状态；TF-IDF 已在训练集 fit）
             m_tt = compute_metrics(test_transfer["label"].to_numpy(),
                                    scores_of(clf, fz.transform(
-                                       input_texts(test_transfer))))
+                                       input_texts(test_transfer,
+                                                   a.input_mode))))
             results[feat][clf_name] = {
                 "C": info["C"],
                 "train_metrics": info["train"],
@@ -62,8 +66,9 @@ def main():
 
     save_json({"train_dataset": a.train_dataset,
                "transfer_dataset": a.transfer_dataset, "seed": a.seed,
+               "input_mode": a.input_mode,
                "note": "复合分布偏移（题型+来源+标签方式同时变化），不作单因素归因",
-               "results": results}, "e3_generalization.json")
+               "results": results}, a.out)
     print("saved results/e3_generalization.json")
 
 

@@ -46,6 +46,14 @@ class TfidfFeaturizer:
 _st_cache = {}
 
 
+def _cache_paths(key: str):
+    """新文件写入两级分片路径（CACHE/ab/abcdef....npy）；旧的扁平路径
+    （CACHE/abcdef....npy，9M+ 文件把 ext4 目录索引写满，新建报 ENOSPC）
+    只读兼容。"""
+    return (os.path.join(CACHE, key[:2], key + ".npy"),
+            os.path.join(CACHE, key + ".npy"))
+
+
 def _encode_st(model_name: str, texts, batch_size: int = 256) -> np.ndarray:
     from sentence_transformers import SentenceTransformer
     if model_name not in _st_cache:
@@ -61,16 +69,19 @@ def _encode_st(model_name: str, texts, batch_size: int = 256) -> np.ndarray:
     todo = []
     for i, t in enumerate(texts):
         key = hashlib.md5((model_name + t).encode("utf-8")).hexdigest()
-        path = os.path.join(CACHE, key + ".npy")
-        if os.path.exists(path):
-            out[i] = np.load(path)
+        sharded, legacy = _cache_paths(key)
+        if os.path.exists(sharded):
+            out[i] = np.load(sharded)
+        elif os.path.exists(legacy):
+            out[i] = np.load(legacy)
         else:
-            todo.append((i, t, path))
+            todo.append((i, t, sharded))
     for lo in range(0, len(todo), batch_size):
         chunk = todo[lo:lo + batch_size]
         emb = model.encode([c[1] for c in chunk], show_progress_bar=False,
                            convert_to_numpy=True, normalize_embeddings=True)
         for (i, _, path), e in zip(chunk, emb):
+            os.makedirs(os.path.dirname(path), exist_ok=True)
             np.save(path, e.astype(np.float32))
             out[i] = e
     return out

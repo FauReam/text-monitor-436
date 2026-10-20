@@ -35,6 +35,9 @@ def input_texts(df: pd.DataFrame, mode: str = "problem+step") -> list:
     if mode == "problem+step":
         return (df["problem_text"].fillna("") + "\n"
                 + df["step_text"].fillna("")).tolist()
+    if mode == "step+problem":  # step 放前面：避免长题目把尾部的 step 截掉
+        return (df["step_text"].fillna("") + "\n"
+                + df["problem_text"].fillna("")).tolist()
     if mode == "step":
         return df["step_text"].fillna("").tolist()
     raise ValueError(mode)

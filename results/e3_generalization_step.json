@@ -1,0 +1,219 @@
+{
+  "train_dataset": "prm800k",
+  "transfer_dataset": "mathshepherd",
+  "seed": 0,
+  "input_mode": "step",
+  "note": "复合分布偏移（题型+来源+标签方式同时变化），不作单因素归因",
+  "results": {
+    "tfidf-word": {
+      "lr": {
+        "C": 1.0,
+        "train_metrics": {
+          "balanced_acc": 0.6999328119564088,
+          "f1": 0.8779748438137249,
+          "auroc": 0.8597346817474674
+        },
+        "test_in_domain": {
+          "balanced_acc": 0.5895872346793668,
+          "f1": 0.8287260854241616,
+          "auroc": 0.7052097832202939
+        },
+        "test_transfer": {
+          "balanced_acc": 0.5054712554858629,
+          "f1": 0.6242027248881927,
+          "auroc": 0.5288142432240565
+        },
+        "delta_transfer_minus_in": -0.1764,
+        "train_test_gap": 0.1545
+      },
+      "svm": {
+        "C": 0.1,
+        "train_metrics": {
+          "balanced_acc": 0.6985415866821378,
+          "f1": 0.8809325813816357,
+          "auroc": 0.8716803569496695
+        },
+        "test_in_domain": {
+          "balanced_acc": 0.5852598061268094,
+          "f1": 0.8337976529955189,
+          "auroc": 0.7076511335925822
+        },
+        "test_transfer": {
+          "balanced_acc": 0.5045613566675397,
+          "f1": 0.6262294813579579,
+          "auroc": 0.5264529347014731
+        },
+        "delta_transfer_minus_in": -0.1812,
+        "train_test_gap": 0.164
+      }
+    },
+    "tfidf-char": {
+      "lr": {
+        "C": 1.0,
+        "train_metrics": {
+          "balanced_acc": 0.6758936704424676,
+          "f1": 0.867657822691852,
+          "auroc": 0.8284988437722562
+        },
+        "test_in_domain": {
+          "balanced_acc": 0.5867373730564949,
+          "f1": 0.8304862197497627,
+          "auroc": 0.7017743725863133
+        },
+        "test_transfer": {
+          "balanced_acc": 0.5160108245254561,
+          "f1": 0.6343262544084877,
+          "auroc": 0.560584715303041
+        },
+        "delta_transfer_minus_in": -0.1412,
+        "train_test_gap": 0.1267
+      },
+      "svm": {
+        "C": 0.1,
+        "train_metrics": {
+          "balanced_acc": 0.6821077780737348,
+          "f1": 0.876190991283341,
+          "auroc": 0.8499526718034767
+        },
+        "test_in_domain": {
+          "balanced_acc": 0.5804851155046098,
+          "f1": 0.8359591006312275,
+          "auroc": 0.7037025683256369
+        },
+        "test_transfer": {
+          "balanced_acc": 0.514117091915013,
+          "f1": 0.6348417610039494,
+          "auroc": 0.5585103608509153
+        },
+        "delta_transfer_minus_in": -0.1452,
+        "train_test_gap": 0.1463
+      }
+    },
+    "st-all-MiniLM-L6-v2": {
+      "lr": {
+        "C": 10.0,
+        "train_metrics": {
+          "balanced_acc": 0.5602101626680304,
+          "f1": 0.8392924314563417,
+          "auroc": 0.7029803253833831
+        },
+        "test_in_domain": {
+          "balanced_acc": 0.5558104835831359,
+          "f1": 0.8336241068336049,
+          "auroc": 0.683584271057203
+        },
+        "test_transfer": {
+          "balanced_acc": 0.5225060143213558,
+          "f1": 0.6238624525817167,
+          "auroc": 0.5546735073794465
+        },
+        "delta_transfer_minus_in": -0.1289,
+        "train_test_gap": 0.0194
+      },
+      "svm": {
+        "C": 0.1,
+        "train_metrics": {
+          "balanced_acc": 0.5496123587179506,
+          "f1": 0.8415931911529083,
+          "auroc": 0.703517559779244
+        },
+        "test_in_domain": {
+          "balanced_acc": 0.5467340699103254,
+          "f1": 0.8373885231432123,
+          "auroc": 0.6809783951595769
+        },
+        "test_transfer": {
+          "balanced_acc": 0.5183945867950073,
+          "f1": 0.6309451034587746,
+          "auroc": 0.5568552381872656
+        },
+        "delta_transfer_minus_in": -0.1241,
+        "train_test_gap": 0.0225
+      }
+    },
+    "st-bge-base-en-v1.5": {
+      "lr": {
+        "C": 1.0,
+        "train_metrics": {
+          "balanced_acc": 0.5854065847022436,
+          "f1": 0.8410693411290623,
+          "auroc": 0.7304797414294086
+        },
+        "test_in_domain": {
+          "balanced_acc": 0.5743106176172061,
+          "f1": 0.83640182553677,
+          "auroc": 0.6974680400050453
+        },
+        "test_transfer": {
+          "balanced_acc": 0.5315113411939618,
+          "f1": 0.6212163214156873,
+          "auroc": 0.5637168956110721
+        },
+        "delta_transfer_minus_in": -0.1338,
+        "train_test_gap": 0.033
+      },
+      "svm": {
+        "C": 0.1,
+        "train_metrics": {
+          "balanced_acc": 0.5812360048227986,
+          "f1": 0.8448858259776927,
+          "auroc": 0.7383156291362043
+        },
+        "test_in_domain": {
+          "balanced_acc": 0.568350443730487,
+          "f1": 0.8396360789949826,
+          "auroc": 0.703658184316943
+        },
+        "test_transfer": {
+          "balanced_acc": 0.5341121117278286,
+          "f1": 0.629119097606122,
+          "auroc": 0.5757219702681972
+        },
+        "delta_transfer_minus_in": -0.1279,
+        "train_test_gap": 0.0347
+      }
+    },
+    "st-bge-large-en-v1.5": {
+      "lr": {
+        "C": 1.0,
+        "train_metrics": {
+          "balanced_acc": 0.585095696436984,
+          "f1": 0.8428023204972048,
+          "auroc": 0.7366180937881264
+        },
+        "test_in_domain": {
+          "balanced_acc": 0.5791383809521602,
+          "f1": 0.8366503796331839,
+          "auroc": 0.7052464290945996
+        },
+        "test_transfer": {
+          "balanced_acc": 0.5377258482794947,
+          "f1": 0.6269446008062378,
+          "auroc": 0.5807675260924873
+        },
+        "delta_transfer_minus_in": -0.1245,
+        "train_test_gap": 0.0314
+      },
+      "svm": {
+        "C": 0.1,
+        "train_metrics": {
+          "balanced_acc": 0.5843088682581015,
+          "f1": 0.8454649974946884,
+          "auroc": 0.74679289311174
+        },
+        "test_in_domain": {
+          "balanced_acc": 0.5785166494652042,
+          "f1": 0.841232043984977,
+          "auroc": 0.7114225348104914
+        },
+        "test_transfer": {
+          "balanced_acc": 0.5468024457167564,
+          "f1": 0.6332581523698448,
+          "auroc": 0.5953790914328223
+        },
+        "delta_transfer_minus_in": -0.116,
+        "train_test_gap": 0.0354
+      }
+    }
+  }
+}
