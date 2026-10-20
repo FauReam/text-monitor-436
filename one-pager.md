@@ -1,21 +1,22 @@
-# One-pager（中期，10/20）
+# Pretrained Features for Math-Step Monitoring: Input and Transfer
 
-**题目**：文字监视器 × 预训练表征——Δ(θ) 测量报告（Project P）
+CSI 436/536, Project P, Midterm, October 20, 2026  
+Jiayu Liao, Zeyu Pan, Yuhan Sun
 
-**研究问题（课程固定）**：预训练表征是否提升下游 ML 任务，尤其在有限训练数据下？我们把"是否"升级为量化问题：Δ(θ) = L_test(简单特征) − L_test(预训练特征) 在制度 θ =（n, 分布偏移, 扰动）上的符号、大小与峰值位置。
+**Question and task.** Do frozen pretrained text features improve a standard classifier, especially with limited labels? We classify math-step correctness with LR or linear SVM, comparing word/character TF-IDF with MiniLM and BGE base/large. Δ = AUROC(embedding) − AUROC(baseline). Each comparison names its input and baseline.
 
-**应用载体**：便宜的文本监视器——只读数学推理步骤的文字，判断其对错。GPT 级模型的推理需要逐步查错，人工标注昂贵，这正是小样本场景的现实动机。
+**Data and protocol.** Prepared PRM800K: 911,867 steps, 27.9% incorrect. Problem-grouped split: 632,422 train / 88,872 reserved validation / 190,573 test. C ∈ {0.1, 1, 10} uses grouped CV in train. Encoders are frozen. Original-input learning curves use n = 20, 50, 100, 500, 2000 with ten stratified training subsamples. Full-data/input-ablation conditions use one fit each, seed 0. AUROC is primary, balanced accuracy secondary.
 
-**数据**：PRM800K（OpenAI，MIT；80 万条人工标注的步骤级 对/错 标签）；Math-Shepherd（GSM8K，自动标签）作泛化测试集；规则式扰动版作鲁棒测试集。标签均来自数据集本身，无需 LLM 打标。
+![Full-data SVM input ablation and transfer](figures/one-pager-results.svg)
 
-**方法（严格合规）**：冻结的 sentence-transformers（MiniLM / bge-base / bge-large）只作特征提取器；下游仅用课上的逻辑回归与线性 SVM；对照组为 TF-IDF（word/char）。输入 = 题目 + 当前步。划分按题目分组杜绝泄漏；指标为 balanced accuracy / AUROC（标签不平衡，不报裸 accuracy）；每个 n 用 10 个种子分层重复抽样报均值 ± 区间；超参只经分组 CV 在训练集内选择，test 只报一次。
+**Current progress.** With problem+step, mean AUROCs are near 0.51 at n=20. From n=50 to 2000, embedding means trail word TF-IDF, with seed-level sign variation. Step-only learning curves remain pending. Removing problem text improves embedding AUROC by 0.050–0.061 versus 0.012–0.016 for TF-IDF. Step-only BGE-large reaches 0.711 versus word TF-IDF 0.708, a +0.0038 point estimate that establishes neither superiority nor equivalence. BGE truncation affects 0.04% of inputs; pooling dilution remains a hypothesis.
 
-**实验**：E1 学习曲线 Δ(n)（n = 20…全量）；E3 泛化 Δ(偏移)（MATH→GSM8K，复合偏移如实归因）；E4 鲁棒 Δ(扰动)；E2 三档表征对比（novelty）；E5/E6 可选。
+For transfer to 613,666 automatically labeled Math-Shepherd/GSM8K steps, step-only BGE-large reaches 0.595 versus word TF-IDF 0.526 (+0.069) and char TF-IDF 0.559 (+0.037). BGE-base also exceeds both, while MiniLM (0.557) trails char TF-IDF. Rule-based perturbations change original-input AUROC by at most 0.007, which does not establish general or step-only robustness.
 
-**预登记预测**：① gap(n) 峰值在小样本区（n ≤ 100）；② 偏移下 Δ 仍为正；③ 扰动下 embedding 衰减不大于 TF-IDF。证伪照样报告。
+**Challenges and plans.** An early label-selection bug was corrected before the reported reruns. Input ablation is exploratory and reuses evaluation sets. Current TF-IDF fitting precedes inner CV, requiring a fold-wise preprocessing rerun. Existing paired bootstrap intervals resample steps rather than problems, so we omit significance claims. Next: fold-wise TF-IDF, problem-level paired intervals, step-only learning curves, and separate problem/step encodings. Transfer changes domain, source, and labeling together, limiting causal attribution.
 
-**当前进展**：SST-2 保底管线已跑通（同一套代码只换 CSV）；PRM800K 分组划分数据管道完成；学习曲线雏形已出（见展示图）。
+**Takeaway.** Benefit depends on input and baseline. BGE transfer offers the clearest observed gain in this setting, with modest absolute AUROC and confirmatory evaluation still needed.
 
-**挑战**：类别不平衡的处理；E3 复合分布偏移不作单因素归因；预登记被证伪时的如实报告。
+**Resources.** OpenAI PRM800K, Math-Shepherd, sentence-transformers MiniLM, BAAI BGE-base/large-en-v1.5.
 
-**计划**：10/21–11 月中完成 E1（最优先）→ E3 → E4 → E2；12/1 期末展示三张核心图：Δ(n)、Δ(偏移)、Δ(扰动)。
+**AI disclosure.** Assistants generated implementation code under group direction and helped check analysis, figures, and rewrite these materials. Group members are responsible for understanding and verifying all submitted content.

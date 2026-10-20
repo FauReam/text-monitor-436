@@ -1,101 +1,105 @@
-# 中期展示讲稿（5:00）— 逐页演讲词 + 技术解释（E7 主线版）
+# 中期展示讲稿：7 页主讲 + 2 页备份
 
-> 配套文件：`slides/midterm_talk_5min.html`（按 N 键，本讲稿就在每页注释面板里）。
-> 总词量约 690 词 ≈ 4:40，留 20 秒余量。演讲词全部是可照念的完整口语句；技术解释供理解和 Q&A，不用念。
-> **主线（评委意见后改版）**：第一答案"同分布没用"→ 评委问"是特征还是输入"→ E7 消融证明主因是输入稀释 → 修输入后同分布追平、迁移收益翻三倍。
+> 英文演讲词为朗读部分，中文解释和 Q&A 不朗读。HTML 内按 N 显示同一份逐页讲稿。
+> 英文朗读约 498 词。目标用时 4:45，预留 15 秒；这不是实测时长，请按个人语速掐表排练。
+> 顺序按 L11 建议：Background → Problem setup → Challenges → Current progress → Plans。展示页以图为主，不再口播评分项。
 
-| 页 | 内容 | 时段 | 累计 |
+| 页 | 内容 | 时长 | 累计 |
 |---|---|---|---|
-| 1 | 标题：headline（第一答案被推翻） | 0:15 | 0:15 |
-| 2 | 内容冲刺：交付要求全覆盖 | 0:30 | 0:45 |
-| 3 | 得分点清单（5 项 ✓） | 0:30 | 1:15 |
-| 4 | 第一答案：Δ(n) 为负（旧输入构造） | 1:15 | 2:30 |
-| 5 | 解剖：特征还是输入？（E7 消融） | 0:50 | 3:20 |
-| 6 | 反转放大：step-only 迁移 Δ 翻三倍 | 1:00 | 4:20 |
-| 7 | 计划 + 收尾 | 0:25 | 4:45 |
-| 8 | backup（不计时，仅 Q&A） | — | — |
+| 1 | Pretrained features for math-step monitoring | 0:25 | 0:25 |
+| 2 | A controlled comparison of feature representations | 0:45 | 1:10 |
+| 3 | The challenge: what text should the monitor read? | 0:35 | 1:45 |
+| 4 | No observed sample-efficiency gain with the original input | 0:45 | 2:30 |
+| 5 | Step-only input narrows the in-domain gap | 0:50 | 3:20 |
+| 6 | BGE transfer gains depend on the baseline | 0:50 | 4:10 |
+| 7 | Validation and the next experiments | 0:35 | 4:45 |
+| 8–9 | Backup，仅 Q&A | 不朗读 | — |
 
----
+## 第 1 页：Pretrained features for math-step monitoring（0:00–0:25）
 
-## 第 1 页 · 标题（0:00–0:15）
+**英文演讲词（49 词）**
 
-**演讲词（约 55 词，语速中快）**
+Our project asks whether pretrained text features help a lightweight classifier judge math reasoning steps. This connects Project P to a concrete binary task: is the current step correct? Our preliminary result depends strongly on what text we encode. The clearest benefit appears in transfer to a different dataset.
 
-"Do pretrained features help a cheap text monitor that judges math reasoning steps? Our first answer was no — not in-distribution. That answer was mostly an artifact of how we fed the input, not of the representations. Fixing the input closed the in-domain gap — and tripled the payoff when the distribution shifts."
+**技术解释，不朗读**
 
-**技术解释**
+这里的 lightweight 指冻结特征上的线性分类器。没有测量编码耗时或部署成本，不声称运行成本优于其他系统。目标是比较表征，不是证明系统能可靠验证数学。
 
-必背三组数：−0.045~−0.064（旧构造同分布，显著）、+0.004（step-only 同分布追平，**点估计不报显著**）、+0.069 [0.067, 0.071]（step-only 迁移，显著）。第一句直接给结论，念完停一拍再翻页。
+## 第 2 页：A controlled comparison of feature representations（0:25–1:10）
 
-## 第 2 页 · 内容冲刺（0:15–0:45）
+**英文演讲词（78 词）**
 
-**演讲词（约 95 词，语速稍快）**
+We compare word and character TF-IDF with three frozen encoders: MiniLM, BGE base, and BGE large. We train logistic regression and linear SVM, without fine-tuning the encoders. Our prepared PRM800K dataset has about nine hundred twelve thousand labeled steps. We split by problem, so steps from one problem cannot cross train and test. AUROC is our main metric, with balanced accuracy as a secondary check. The figures today use linear SVM and identify the input in every comparison.
 
-"First, sixty seconds of everything required. Verifying a language model's reasoning step by step is expensive, so we built a cheap monitor that reads one math step and judges it right or wrong. We measure the gap between pretrained features and TF-IDF across three regimes, plus an input ablation — and the only thing we vary is where the features come from. The data is PRM800K, nine hundred eleven thousand human-labeled steps, twenty-eight percent wrong, split grouped by problem. The learners are frozen embeddings plus logistic regression and linear SVM, against TF-IDF. Every metric is balanced, over ten seeds, test set touched once."
+**技术解释，不朗读**
 
-**技术解释**
+编码器：sentence-transformers/all-MiniLM-L6-v2、BAAI/bge-base-en-v1.5、BAAI/bge-large-en-v1.5。TF-IDF word=(1,2)，char_wb=(3,5)，均 min_df=2。C 网格0.1/1/10。训练/预留验证/测试步骤632422/88872/190573。分组划分防止同题步骤跨集合，但不能据此声称整个协议完全无泄漏。现有 TF-IDF 在内部 CV 前 fit，需在各折内部重拟合后重跑。AUROC 不是 balanced accuracy。
 
-便宜监视器：输入=题目+当前步文字（主设定），输出=对/错。"only variable"是 Soundness 核心——分类器/数据/协议全固定，唯一变的是特征来源。grouped by problem：同一道题的多条步骤文字高度相似，按步骤随机分=泄漏、指标虚高；按题分（train 632,422 / test 190,573）。balanced 指标：错例仅 27.9%，裸 accuracy 误导。10 种子分层抽样；C 只在训练集内 grouped CV 选；test 只评一次。数字要念准：911,867 / 27.9% / grouped by problem。
+## 第 3 页：The challenge: what text should the monitor read?（1:10–1:45）
 
-## 第 3 页 · 得分点清单（0:45–1:15）
+**英文演讲词（65 词）**
 
-**演讲词（约 70 词）**
+A key challenge is deciding what the monitor should read. Our original input joins the problem and current step. We compare that with putting the step first, and with using the step alone. Each input uses the same data split. Removing context might help a sentence encoder focus on the step, but that is a hypothesis. It could also remove information needed to judge correctness.
 
-"And our scorecard. For soundness, a leakage-free grouped split, balanced metrics, ten-seed intervals, hyperparameters chosen inside train only. For clarity, every conclusion is a gap with an interval, never a bare number. Four experiments are complete on clean data — we shipped one bug, caught it, and re-ran everything — and when reviewers challenged our headline, we ran the ablation that changed the answer. Checklist done. Now the story."
+**技术解释，不朗读**
 
-**技术解释**
+这三种输入使用同一数据划分，但各自按当前协议选 C，因此是输入条件的端到端比较，并非固定超参数下纯池化因果实验。原始标签构造 bug 已修复，本次使用修复后结果。MiniLM 截断1.6388%，BGE0.0395%，但少量截断本身不能定量排除所有影响。没有真实外部评审经历的证据，不使用 reviewer / hostile review 叙述。
 
-五个评分项评委直接对号入座，口播只点 soundness 和 clarity 两个最硬的。takeaway 放慢加重、停一拍再翻页。这版叙事更强：负结果不只是如实报告，还被评委问题推动做成了消融——"回应评审"本身就是 Challenges 分的直接证据。
+## 第 4 页：No observed sample-efficiency gain with the original input（1:45–2:30）
 
-## 第 4 页 · 第一答案：Δ(n) 为负（1:15–2:30，全场最慢）
+**英文演讲词（70 词）**
 
-**演讲词（约 150 词）**
+First, the limited-data experiment uses the original problem-plus-step input. The horizontal axis is the number of labeled training steps. The vertical axis is test AUROC. Points average ten training subsamples, and error bars show one standard deviation. At twenty labels, mean performance is near chance. From fifty through two thousand, all three embedding means remain below word TF-IDF. We have not yet tested whether step-only input changes this learning curve.
 
-"Here is the first answer, and it did not look good. The textbook says pretrained features should help most when training data is scarce — the sample-efficiency story. We measured the opposite. At n equals twenty, everything sits at zero point five one, near random, for every feature — there is simply no signal to harvest. From fifty on, the gap between embedding and TF-IDF turns negative and stays negative, monotone, ten seeds out of ten. At full data, TF-IDF beats every embedding by five AUROC points or more, with a ninety-five percent interval that excludes zero. We reported this as an honest boundary — pretrained features do not pay in-domain. Then came the question that changed the talk — is this the features, or the way we feed them?"
+**技术解释，不朗读**
 
-**技术解释**
+n=20/50/100/500/2000，每点10个按标签分层抽取的训练子样本，固定题目分组测试集。误差线为样本标准差（ddof=1），不是95% CI。full点只有1次，不放入重复抽样曲线。小样本各种子差值可变号，不能说10/10同号或严格单调。此图仅支持原始输入下的观察。
 
-图读法：左图 x=n(log)、y=ΔAUROC(embedding−TF-IDF)，三条线=三个 embedding；右图 n=20–500 配对差值放大。**图注是 input = problem+step（旧构造），别念成全部结论**。n=20 全≈0.51：谁都学不出来。配对差值消抽样方差；单点 CI 跨 0 但 10/10 种子同号、4 点单调——方向一致、单点功效不足，照实说。−0.045~−0.064 是 SVM 口径（LR −0.037 起）。结尾的 reviewer 问句是钩子，语气放慢。
+## 第 5 页：Step-only input narrows the in-domain gap（2:30–3:20）
 
-## 第 5 页 · 解剖：特征还是输入？（2:30–3:20，E7）
+**英文演讲词（81 词）**
 
-**演讲词（约 140 词，语速稍快）**
+Next, the full-data input ablation. Each row is one representation, and moving right means higher AUROC. The blue diamonds show step-only input. Removing the problem improves embeddings by about five to six AUROC points, more than it improves TF-IDF. BGE large reaches zero point seven one one, compared with word TF-IDF at zero point seven zero eight. These are point estimates from one fit per condition. They neither establish superiority nor statistical equivalence, and they do not isolate a pooling mechanism.
 
-"So — features, or input? Three suspects. First, truncation: our input puts the step at the tail of a long prompt, and MiniLM caps at two hundred fifty-six tokens. We measured it — the median input is eighty-nine tokens; MiniLM truncates one point six percent of rows, bge almost none. Real, but far too small. Second, position — moving the step to the front helps embeddings by up to two points, and TF-IDF not at all. Third, dilution — dropping the problem text entirely gives embeddings another three-plus points, and TF-IDF barely one. The problem was dominating the pooling. And here is the verdict — with step-only input, bge-large draws level with TF-IDF, zero point seven one one against zero point seven oh eight. The in-domain 'no' was mostly the input, not the features."
+**技术解释，不朗读**
 
-**技术解释**
+E7为全量训练 seed=0，每条件1次。MiniLM 0.6314→0.6810，base 0.6498→0.7037，large 0.6505→0.7114；word 0.6958→0.7077，char 0.6873→0.7037。large相对word精确差值+0.0037714。只能说点估计接近，不能证明相等、等效、显著胜出。位序、长度、上下文信息和正则化均可能参与。
 
-三嫌犯逐一排除：截断（MiniLM 256 / bge 512 token 上限；中位 89、p99=291；MiniLM 1.6% 行被截、0.6% 整步丢失，bge 0.04%）量级不足；位置（step 前置 +0.015~0.026）；稀释（去题目再 +0.03 以上，主因——题目文本主导均值池化/CLS）。**+0.004 是点估计、无区间——只说"draws level / 追平"，不说"显著反超"**。若被追问旧解释（窄任务/char n-gram 强）：那解释的是 TF-IDF 为何是强基线；E7 解释的是 embedding 为何被压低——两者并存，主因是稀释。
+## 第 6 页：BGE transfer gains depend on the baseline（3:20–4:10）
 
-## 第 6 页 · 反转放大（3:20–4:20，全场高潮）
+**英文演讲词（81 词）**
 
-**演讲词（约 155 词）**
+For transfer, we train on PRM800K and evaluate on Math-Shepherd. Here, step-only BGE large reaches zero point five nine five. Its gain is about zero point zero six nine over word TF-IDF, but only zero point zero three seven over the stronger character baseline. BGE base also exceeds both. MiniLM slightly trails character TF-IDF. All transfer scores remain modest. This is a compound shift in problem type, data source, and labeling, so we cannot attribute the gain to just one factor.
 
-"Now the payoff. We keep the fixed input and move the distribution — we train on MATH and test on GSM8K. With the original input, bge-large beat TF-IDF by plus zero point zero two zero. With the step-only input, the gap triples — plus zero point zero six nine — and now all three embeddings are significantly positive, the size gradient intact. And notice what happens to TF-IDF — removing the problem text hurts its transfer, zero point five five one down to zero point five two seven. The problem carried transferable lexical cues; without them, TF-IDF is stuck memorizing MATH-specific surface tokens. Perturbations stay at parity, and selective prediction still slightly favors TF-IDF — we report both as-is. So the refined thesis is that once the input lets them speak, pretrained features pay everywhere — and most when the distribution drifts."
+**技术解释，不朗读**
 
-**技术解释**
+step-only SVM：word0.526453，char0.558510，MiniLM0.556855，base0.575722，large0.595379。large-word=+0.068926；large-char=+0.036869；base-char=+0.017212；MiniLM-char=-0.001655。旧输入 large-word=+0.019587，large-char=+0.008635。现有CI只有对word的按步骤paired bootstrap，未处理同题相关性，不能套用到char或声称所有embedding显著优于两个基线。
 
-step-only 迁移端（SVM，paired bootstrap 1000 次）：tfidf-word 0.5265 / MiniLM 0.5569 / bge-base 0.5757 / bge-large 0.5954；Δ = +0.030 / +0.049 / +0.069，CI [0.029,0.032] / [0.048,0.051] / [0.067,0.071]——全部显著为正且随尺寸单调。迁移退化 bge-large −0.116 vs tfidf-word −0.181。复合偏移披露不变：题型+来源+标签方式同时变，只做复合归因。图是旧构造（图注已标明），新数字在右侧 bullet——若评委问图为何不是 step-only：E7 是评审后新增，数字有 JSON 背书。
+## 第 7 页：Validation and the next experiments（4:10–4:45）
 
-## 第 7 页 · 计划 + 收尾（4:20–4:45）
+**英文演讲词（74 词）**
 
-**演讲词（约 72 词）**
+For the final, our priority is stronger validation. We will fit TF-IDF inside each cross-validation fold and replace step-level bootstrap intervals with intervals that resample whole problems. We will also run step-only learning curves and compare separate encodings of the problem and step. Because the input ablation reused evaluation sets, we treat it as exploratory. Our current conclusion is conditional: input construction and baseline choice change the apparent value of pretrained features. Thank you.
 
-"For the final, we will dig into why step-only helps at all, decompose the compound shift into single factors, and grow E6, our predictor of the downstream gap from representation properties — the correlation is zero point nine on four points, still preliminary. We asked whether pretrained representations help. The answer survived a hostile review — yes, if the input lets them speak, and loudest when the distribution drifts. Thank you."
+**技术解释，不朗读**
 
-**技术解释**
+优先顺序：修TF-IDF折内预处理并重跑→按题目paired bootstrap→step-only小样本曲线→问题和步骤分别编码拼接。输入消融是探索性结果，不能再称test touched once；只有尚未查看且能保证独立的数据才能作最终确认集。两个数据集可能存在题目重叠，需要另查。复合偏移不等于单一domain因果效应。AI披露需要包含本次分析核对与改稿，组员提交前需逐项确认理解。
 
-E6：Spearman ρ=0.900、p=0.037、n=4 点——必须带 preliminary。期末交付：三条 Δ 曲线 × 两种输入构造，测量报告式。若被问 AUROC 绝对值：任务本身难，我们报 Δ 不报绝对水平。讲完停在 takeaway，4:45 为理想点。
+## Q&A 口径
 
-## 第 8 页 · backup（不计时）
+- **是否证明 embedding 比 TF-IDF 好？** 当前只支持条件性的比较。step-only BGE 两个模型的迁移点估计超过两个基线，MiniLM没有超过char基线。同分布BGE-large与word差+0.0038，还不能断言优越或等效。
+- **为什么不用全部10种子CI？** 只有原始输入的小样本曲线每点10次训练抽样，全量和E7每条件一次。曲线误差线是1 SD，不是95% CI。固定测试集上的重复训练子样本不等于10个独立测试集。
+- **原CI说明什么？** BGE-large相对word的step-only迁移按步骤配对bootstrap区间为[0.067,0.071]。它忽略同题相关性，且不包含训练随机性，不作为当前显著性结论；对char基线没有现成区间。
+- **是否已解释输入机制？** 没有。低截断率和输入消融支持继续检查上下文/池化/位置，不能单独证明稀释为主因。TF-IDF和embedding也都按每个输入条件另选C。
+- **AUROC不高怎么办？** 直接承认绝对水平有限。数学步骤正确性可能需要完整上下文或实际计算。当前研究的是表征比较，不是部署级验证器。不能用“只看Δ”回避能力限制。
+- **测试集是否只用一次？** 不能这样说。多个实验和探索性输入消融复用了评估集。只在确认从未查看且独立时，才能把后续数据称作未触碰确认集。
+- **代码与数据是否已重新核验？** 本轮按现有JSON重写与重画，没有重新运行原实验。本地项目没有原始数据/模型缓存，无法在本轮补做折内TF-IDF、按题目CI或step-only学习曲线。已有代码限制在报告和展示中列出。
+- **AI使用？** AI在组员指导下生成实现代码，也协助本次分析核对、图表及文字改写。组员必须理解并验证提交内容。不要在未实际完成代码通读前声称“已经理解每一行”。
 
-无演讲词，被问到才翻。数字表已含 E7/step-only 全部口径 + 五个预演问题。AI 使用被问时照实答：实现代码由 AI 在我组指导下编写；研究框架、实验设计、数据检查与消融设计由本组完成；已通读全部代码，能逐行解释。
+## 排练与操作
 
----
-
-## 排练要点
-
-- 掐表两遍：第 7 页讲完应在 4:45 ± 0:10
-- 三处停顿：第 1 页 headline 后、第 3 页 "Checklist done" 后、第 6 页 refined thesis 逐字念
-- 数字必念准：911,867 · 27.9% · −0.045~−0.064 · 0.711 vs 0.708 · +0.069 [0.067, 0.071] · 0.551→0.527
-- 口径纪律：step-only 同分布只说"追平"，不说"反超"；禁用词"失败"，一律 "negative result / artifact / boundary"
+- 英文讲稿先按自然语速排练两遍，目标第7页在4:45内结束。不要念中文解释、来源脚注和备份页。
+- 指图时说明横轴、纵轴、输入模式和基线。重点数字：0.711 vs 0.708；迁移0.595；相对word +0.069、相对char +0.037。
+- 第4页只谈原始输入的样本效率，第5页是全量训练输入消融，不能混为同一个结论。
+- HTML离线可用：方向键翻页，N注释，T计时/暂停，R重置，F全屏，Home首页，End主讲末页。主讲7页后才进入备份。
+- PDF备用版本包含7页主讲和2页Q&A，讲到第7页停。最终提交前，全组确认结论、AI披露与实际工作相符。

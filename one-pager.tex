@@ -1,66 +1,76 @@
 \documentclass[10pt]{article}
-\usepackage[margin=0.55in]{geometry}
-\usepackage{enumitem}
-\usepackage{amsmath}
+\usepackage[letterpaper,margin=0.55in]{geometry}
 \usepackage[T1]{fontenc}
-\usepackage{lmodern}
+\usepackage{lmodern,amsmath,graphicx,microtype}
+\usepackage[hidelinks]{hyperref}
 \pagestyle{empty}
 \setlength{\parindent}{0pt}
-\setlength{\parskip}{2pt}
-\newcommand{\head}[1]{\vspace{4pt}\textbf{\small #1}\par}
-
+\setlength{\parskip}{3pt}
+\newcommand{\head}[1]{\vspace{3pt}\textbf{#1}\quad}
 \begin{document}
-
 \begin{center}
-{\large \textbf{Can a Cheap Text Monitor Tell Right from Wrong Reasoning?}}\\[2pt]
-{\small CSI 436/536 Machine Learning (Fall 2026) --- Project P Midterm One-Pager \quad
-Group: Jiayu Liao, Zeyu Pan, Yuhan Sun \quad Oct 20, 2026}
+{\large\bfseries Pretrained Features for Math-Step Monitoring: Input and Transfer}\\[3pt]
+{\small CSI 436/536, Project P, Midterm \quad October 20, 2026\\
+Jiayu Liao, Zeyu Pan, Yuhan Sun}
 \end{center}
-\vspace{-4pt}
+\vspace{-6pt}
+\head{Question and task.}
+Do frozen pretrained text features improve a standard classifier, especially with limited labels?
+We classify the correctness of one math solution step using logistic regression (LR) or linear SVM.
+The feature alternatives are word/character TF-IDF, MiniLM-L6-v2, and BGE-base/large-en-v1.5.
+We measure $\Delta=\mathrm{AUROC}(\mathrm{embedding})-\mathrm{AUROC}(\mathrm{baseline})$.
+The baseline and input construction always accompany a comparison.
 
-\head{Research question (fixed by the project).}
-Do pretrained representations improve downstream ML tasks, particularly under limited training data?
-We turn the yes/no question into a measurement problem. With the class algorithm $g$ and training data fixed,
-the \emph{only} varied factor is the feature source $\varphi$, and we report the gap function
-\[
-\Delta(\theta) \;=\; L_{\text{test}}\big(g \circ \varphi_{\text{simple}};\, \theta\big) \;-\; L_{\text{test}}\big(g \circ \varphi_{\text{pretrained}};\, \theta\big),
-\qquad \theta = (\text{train size } n,\ \text{shift},\ \text{perturbation},\ \text{input construction}).
-\]
-All reported $\Delta$ values are AUROC differences (embedding $-$ TF-IDF), i.e.\ $L = 1 - \mathrm{AUROC}$ in the formula above: $\Delta > 0$ favors pretrained features.
+\head{Data and protocol.}
+Our prepared PRM800K contains 911,867 human-labeled steps (27.9\% incorrect).
+Splitting by problem gives 632,422 train / 88,872 reserved validation / 190,573 test steps.
+We select $C\in\{0.1,1,10\}$ by grouped CV within train. Encoders remain frozen.
+The original-input learning curve uses $n\in\{20,50,100,500,2000\}$ with ten stratified training subsamples each.
+Full-data and input-ablation results use one fit per condition (seed 0).
+AUROC is primary here, with balanced accuracy recorded as a secondary metric.
 
-\head{Task and data.}
-A cheap \emph{text monitor} for math reasoning: given a problem and one solution step, classify the step as correct or incorrect.
-\textbf{PRM800K} (OpenAI, MIT): human-labeled step-level correctness on MATH solutions --- 911{,}867 labeled steps
-(27.9\% incorrect) after our data preparation; grouped by problem into 632{,}422 train / 88{,}872 val (reserved, unused this round) / 190{,}573 test steps.
-\textbf{Math-Shepherd} (GSM8K, automatically labeled, 613{,}666 steps): transfer test set only.
-Rule-based perturbed variants (typos, number formatting, LaTeX style): robustness test sets.
-Labels come with the datasets; no LLM labeling is used.
+\vspace{1pt}
+\includegraphics[width=\linewidth]{figures/one-pager-results.pdf}
+\vspace{-2pt}
+\begin{minipage}{\linewidth}\footnotesize
+\textbf{Figure 1.} Full-training linear SVM point estimates (higher is better).
+Left: changing the text supplied to the same feature family.
+Right: train on PRM800K/MATH, evaluate on Math-Shepherd/GSM8K (613,666 automatically labeled steps).
+Blue diamonds show step-only input. No uncertainty intervals are implied.
+\end{minipage}\par
 
-\head{Method (strictly within the rules).}
-Pretrained embeddings --- \texttt{all-MiniLM-L6-v2}, \texttt{bge-base}, \texttt{bge-large} --- are \emph{frozen} feature extractors only (forward pass, no fine-tuning).
-On top we train only models covered in class: logistic regression (L7) and linear SVM (L11).
-Control arm: TF-IDF (word / char n-grams) with the same classifiers.
-Protocol: input = problem + current step (main setting; input construction ablated in E7); \textbf{group split by problem} (no step of one problem crosses train/test);
-primary metrics \textbf{balanced accuracy / AUROC} (labels are imbalanced);
-10 stratified re-samples per $n$, mean $\pm$ CI; $C$ selected by grouped $k$-fold CV inside the training set; test set touched once; all seeds fixed.
+\head{Current progress.}
+\textbf{Limited data:} with problem+step input, all mean AUROCs are near 0.51 at $n=20$.
+For $n=50$--2000, each embedding's mean is below word TF-IDF. Seed-level differences vary in sign at small $n$.
+This provides no observed sample-efficiency advantage under the original input, while step-only learning curves remain pending.
+\textbf{Input ablation:} removing the problem improves embedding AUROC by 0.050--0.061, versus 0.012--0.016 for TF-IDF.
+BGE-large reaches 0.711 versus word TF-IDF's 0.708 ($\Delta=+0.0038$), a point estimate rather than evidence of superiority or equivalence.
+Only 0.04\% of BGE inputs truncate. This makes truncation alone an unlikely explanation, but pooling dilution remains a hypothesis.
+\textbf{Transfer:} with step-only input, BGE-large reaches 0.595 versus word TF-IDF's 0.526 and char TF-IDF's 0.559.
+Its gap is +0.069 versus word and +0.037 versus char. BGE-base also exceeds both baselines, whereas MiniLM (0.557) does not exceed char TF-IDF.
+\textbf{Perturbations:} original-input rule-based edits change AUROC by at most 0.007 across the tested models. This does not establish general robustness or step-only robustness.
 
-\head{Current progress (three axes complete + reviewer-driven input ablation).}
-\textbf{$\Delta(n)$, sample efficiency} (problem+step input): at $n{=}20$ all features sit near chance ($\approx 0.51$ AUROC); from $n{=}50$ TF-IDF pulls ahead monotonically; at full data $\Delta = -0.045$ to $-0.064$ (SVM, CI excludes 0) --- no in-domain benefit \emph{in this input construction}.
-\textbf{E7 input ablation} (reviewer question: features, or input?): truncation is real but tiny (median input 89 tokens; MiniLM truncates 1.6\% of rows, bge 0.04\%). Dropping the problem text (step-only) lifts embeddings by $+0.030$--$+0.061$ vs.\ only $+0.012$--$+0.016$ for TF-IDF --- \emph{the problem text hurts embeddings far more than TF-IDF}, consistent with pooling dilution (not yet isolated as the sole mechanism). Step-only bge-large ($0.711$) draws level with TF-IDF ($0.708$; point estimate from the full-data run, CI to follow). \emph{The in-domain negative $\Delta$ is mostly an input-construction effect, not a feature property.}
-\textbf{$\Delta(\text{shift})$, generalization}: with step-only input the transfer gain triples --- bge-large $\Delta = +0.069$, CI $[0.067, 0.071]$; bge-base $+0.049$; MiniLM $+0.030$ (all significant, paired bootstrap; original construction gave bge-large $+0.020$). Removing the problem text \emph{hurts} TF-IDF transfer ($0.551 \to 0.527$); embeddings also overfit far less (train--test gap $0.040$--$0.065$ vs.\ $0.153$--$0.168$).
-\textbf{$\Delta(\text{noise})$, robustness}: under rule-based perturbations all degradations are small ($\le 0.007$ AUROC), embeddings no worse than TF-IDF.
-Headline: \emph{the value of pretrained features is conditional on input construction --- and largest under distribution shift.}
-Robustness checks: 50/50 re-sampling and \texttt{class\_weight=balanced} change AUROC by $<0.01$.
+\head{Challenges and next steps.}
+We corrected an early label-selection bug and reran the experiments reported here.
+The input ablation is exploratory, with repeated use of the same evaluation sets.
+Current TF-IDF vocabulary/IDF fitting precedes inner CV, so its tuning estimates need a fold-wise preprocessing rerun.
+Existing paired bootstrap intervals resample steps, ignoring within-problem dependence, so we omit significance claims.
+Next we will fix fold-wise preprocessing, compute paired problem-level intervals, and run step-only learning curves.
+Separately encoding problem and step can test the dilution hypothesis.
+Transfer changes task domain, data source, and labeling together, so causal attribution needs controlled follow-up.
 
-\head{Challenges and plans.}
-We caught our own label-construction bug early (chosen-only completions, 99.8\% positives, degenerate metrics); everything above is the corrected re-run.
-The MATH$\to$GSM8K shift is a \emph{compound} shift (problem type, source, labeling method) --- reported without single-factor attribution; a decomposition is planned.
-Cheapest mechanism check next: encode problem and step \emph{separately} and concatenate --- keeps context, avoids pooling dilution. Also next: a step-only $\Delta(n)$ curve and the step-only in-domain CI (cached features make both cheap), single-factor shift decomposition, and a final measurement report (effect sizes + three boundary curves, both input constructions).
+\head{Takeaway.}
+The observed benefit depends on input construction and baseline choice.
+The clearest gain is BGE transfer in this tested setting, with modest absolute AUROC and confirmatory evaluation still needed.
 
-\head{AI use disclosure (per syllabus \S4.8).}
-The implementation code was written by AI assistants under our direction (also used for language polishing). The research framing, experimental design, data checking, and ablation design were carried out by the group; we have read all of the code and can explain every part of it.
-
-\head{Acknowledgments.}
-{\sloppy This work uses public datasets and open model weights: the \textbf{PRM800K} dataset (OpenAI, MIT license), \textbf{Math-Shepherd} (GSM8K), and the frozen sentence-transformers checkpoints \texttt{all-MiniLM-L6-v2}, \texttt{bge-base-en-v1.5} and \texttt{bge-large-en-v1.5} (BAAI). We thank the authors for making them publicly available.\par}
-
+\vspace{3pt}
+{\footnotesize\textbf{Resources.}
+\href{https://github.com/openai/prm800k}{PRM800K (OpenAI)},
+\href{https://huggingface.co/datasets/peiyi9979/Math-Shepherd}{Math-Shepherd},
+\href{https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2}{MiniLM},
+\href{https://huggingface.co/BAAI/bge-base-en-v1.5}{BGE-base},
+\href{https://huggingface.co/BAAI/bge-large-en-v1.5}{BGE-large}.
+\textbf{AI disclosure (syllabus \S4.8).}
+AI assistants generated implementation code under group direction and assisted with analysis checking, figures, and rewriting these materials.
+The group designed the study and data checks. Group members are responsible for understanding and verifying all submitted content.}
 \end{document}
