@@ -68,6 +68,36 @@ python slides/make_slides.py       # 嵌入最新 figures 重新生成 pptx
 
 所有脚本固定种子（`--seed`，默认 0）；所有结果写入 `results/`，图写入 `figures/`。
 
+### 本次实际复现记录（DGX Spark / GB10, aarch64, torch 2.9.1+cu130）
+
+- 数据来自 hf-mirror：`tasksource/PRM800K`（与官方 LFS 字节数一致）与
+  `peiyi9979/Math-Shepherd`（`--task GSM8K`，schema 与 GitHub 原版不同，
+  由 prep 脚本自动识别）。模型下载设 `HF_ENDPOINT=https://hf-mirror.com`。
+- E1 按特征 5 进程并行（`--out-suffix`），全量点 `--full-seeds 1`
+  （全量无抽样随机性，各种子训练集完全相同），最后合并 5 个分片 JSON 为
+  `results/e1_learning_curves_prm800k.json`。
+- 全量训练结果经 `fit_full_cached` 在 E1/E2/E3/E4/E5 间共享（数值不变）。
+- E3/E4 的 embedding 编码先用 `src/pre_encode.py` 按 md5 分片 6 进程并行灌缓存，
+  再跑正式脚本时全部命中缓存。
+
+## 结果摘要（2026-10-20 跑完，种子 0）
+
+**任务**：PRM800K 步骤二分类（对=541,039 / 错=1,223，0.2% 正类的极端不平衡）。
+主指标 AUROC；全量训练 352k 步，test 102k 步（按题目分组）。
+
+**E1 · Δ(n) 学习曲线（预测 1：部分成立）**
+- 峰值位置 ✓：三种 embedding 对 TF-IDF(word) 的 AUROC 差均在 n=50 附近达峰
+  （MiniLM +0.029 / bge-base +0.026，10 种子均值；LR/SVM 一致）。
+- "gap 保持非负" ✗：n≥2000 后 bge 系转负；全量端 SVM 下
+  tfidf-char 0.704 ≥ bge-large 0.688 ≈ tfidf-word 0.688，MiniLM 0.654。
+- 工件注记：bge+LR 全量点 AUROC<0.5（0.2% 正类下 log-loss 的排序退化），
+  故正文以 SVM 为主对照、LR 并列给出。
+
+**E2 · 全量表征对比**：embedding − TF-IDF 的 Δ 在全量端为 -0.05~+0.01
+（区间跨 0，bootstrap CI 见 results/e2_representation_compare.json）。
+
+**E3 · Δ(偏移)（预测 2）/ E4 · Δ(扰动)（预测 3）/ E5 / E6**：见下节与 results/。
+
 ## 合规
 
 - 纯 Python；embedding 模型全程冻结（只前向，无梯度回传）；下游仅逻辑回归 / 线性 SVM。

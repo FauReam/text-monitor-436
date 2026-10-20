@@ -1,0 +1,21 @@
+{
+  "dataset": "prm800k",
+  "classifier": "lr",
+  "note": "4 个点的初步观察，仅作 discussion / future work",
+  "separation_stat": {
+    "tfidf-word": 1.7622079346631684e-05,
+    "tfidf-char": 1.9564991753387236e-05,
+    "st-all-MiniLM-L6-v2": 2.1750565113446364e-05,
+    "st-bge-base-en-v1.5": 2.0531253034896805e-05,
+    "st-bge-large-en-v1.5": 2.065052448909899e-05
+  },
+  "delta_vs_tfidf_word": {
+    "tfidf-word": 0.0,
+    "tfidf-char": 0.015982865326779616,
+    "st-all-MiniLM-L6-v2": 0.008881795634345213,
+    "st-bge-base-en-v1.5": -0.13912487415193542,
+    "st-bge-large-en-v1.5": -0.12879123336904125
+  },
+  "spearman_rho": -0.09999999999999999,
+  "spearman_p": 0.8728885715695384
+}
