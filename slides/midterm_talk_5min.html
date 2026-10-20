@@ -5,18 +5,20 @@
 <title>Midterm Talk — Cheap Text Monitors × Pretrained Representations (5:00)</title>
 <style>
   :root{
-    --bg:#0e1116; --fg:#e8eaf0; --dim:#9aa3b2; --accent:#4cc2ff;
-    --good:#43d17c; --bad:#ff6b6b; --warn:#ffd166; --card:#171c24;
+    --bg:#ffffff; --fg:#17181c; --dim:#5f6672; --accent:#2456c8;
+    --good:#1a7f4b; --bad:#c03434; --warn:#b45309; --card:#f4f6f9;
   }
   *{box-sizing:border-box; margin:0; padding:0;}
   html,body{height:100%; background:var(--bg); color:var(--fg);
     font-family:-apple-system,"SF Pro Display","Helvetica Neue",Arial,sans-serif;}
   .deck{height:100vh; width:100vw; position:relative; overflow:hidden;}
   section.slide{position:absolute; inset:0; display:none; flex-direction:column;
-    justify-content:center; padding:5vh 7vw 8vh;}
+    justify-content:center; padding:5vh 7vw 8vh; background:var(--bg);}
   section.slide.active{display:flex;}
+  section.slide aside.notes{display:none;}
   h1{font-size:3.0vw; line-height:1.15; letter-spacing:-0.01em;}
-  h2{font-size:2.0vw; color:var(--accent); margin-bottom:2.5vh; font-weight:700;}
+  h2{font-size:2.0vw; color:var(--fg); margin-bottom:2.5vh; font-weight:700;
+     border-bottom:3px solid var(--accent); padding-bottom:0.7vh; align-self:flex-start;}
   h2 .tag{color:var(--dim); font-size:1.0vw; font-weight:500; margin-left:1vw;}
   ul{list-style:none;}
   li{font-size:1.35vw; line-height:1.5; margin:0.9vh 0; padding-left:1.6em; position:relative;}
@@ -24,45 +26,53 @@
   li.sub{font-size:1.1vw; color:var(--dim); padding-left:3.2em;}
   li.sub::before{content:"–"; left:2.2em; color:var(--dim);}
   li.check::before{content:"✓"; color:var(--good); font-weight:700;}
-  b,strong{color:#fff;}
+  b,strong{color:#000;}
   .pos{color:var(--good); font-weight:700;}
   .neg{color:var(--bad); font-weight:700;}
   .warn{color:var(--warn); font-weight:700;}
   .mono{font-family:"SF Mono",Menlo,monospace; font-size:0.92em;}
   .lead{font-size:1.6vw; color:var(--dim); margin-top:2vh; line-height:1.5;}
+  .lead b{color:var(--fg);}
   .figrow{display:flex; gap:2vw; align-items:center; margin:2vh 0;}
-  .figrow img{background:#fff; border-radius:8px; padding:8px;}
+  .figrow img{background:#fff; border:1px solid #e4e7ec; border-radius:6px; padding:6px;}
   .figrow .cap{font-size:0.95vw; color:var(--dim); text-align:center; margin-top:0.6vh;}
   .figcol{flex:1; display:flex; flex-direction:column; align-items:center;}
   img.main{max-width:100%; max-height:44vh; object-fit:contain;}
   .cols{display:flex; gap:3vw;}
-  .col{flex:1; background:var(--card); border-radius:12px; padding:2.2vh 1.6vw;}
+  .col{flex:1; background:var(--card); border:1px solid #e8ebf0; border-radius:10px; padding:2.2vh 1.6vw;}
   .col h3{font-size:1.25vw; color:var(--accent); margin-bottom:1.2vh;}
   .col li{font-size:1.12vw;}
   .kicker{font-size:1.0vw; text-transform:uppercase; letter-spacing:0.15em;
     color:var(--dim); margin-bottom:1.5vh;}
   .takeaway{margin-top:2.5vh; padding:1.8vh 1.6vw; background:var(--card);
-    border-left:4px solid var(--accent); border-radius:8px;
+    border-left:4px solid var(--accent); border-radius:6px;
     font-size:1.5vw; line-height:1.45;}
   table.num{border-collapse:collapse; margin-top:1.5vh; font-size:1.05vw;}
-  table.num th,table.num td{border:1px solid #2a3240; padding:0.55vh 0.9vw; text-align:right;}
-  table.num th{color:var(--accent); text-align:right;}
+  table.num th,table.num td{border:1px solid #dde2e9; padding:0.55vh 0.9vw; text-align:right;}
+  table.num th{color:var(--accent); text-align:right; background:var(--card);}
   table.num td:first-child,table.num th:first-child{text-align:left;}
   /* chrome */
-  #bar{position:fixed; left:0; bottom:0; height:5px; background:var(--accent); width:0%; z-index:30;}
+  #bar{position:fixed; left:0; bottom:0; height:4px; background:var(--accent); width:0%; z-index:30;}
   #hud{position:fixed; right:1.2vw; bottom:1.2vh; z-index:30; color:var(--dim);
     font-size:0.85vw; font-family:"SF Mono",Menlo,monospace; text-align:right;}
   #hud .seg{color:var(--accent);}
-  section.slide aside.notes{display:none;}
   #notes{position:fixed; left:0; right:0; bottom:0; top:auto; max-height:38vh; overflow:auto;
-    background:#0a0d12; border-top:1px solid #2a3240; padding:1.6vh 7vw; display:none; z-index:25;}
+    background:#f7f8fa; border-top:1px solid #e2e5ea; padding:1.6vh 7vw; display:none; z-index:25;}
   #notes.on{display:block;}
   #notes h4{color:var(--warn); font-size:1.0vw; margin-bottom:0.8vh;}
-  #notes p{font-size:1.05vw; color:#c8cfda; line-height:1.55; margin:0.5vh 0;}
-  #notes .zh{color:#8fa3bf;}
+  #notes p{font-size:1.05vw; color:#2b2f36; line-height:1.55; margin:0.5vh 0;}
+  #notes .zh{color:#6b7280;}
   #notes .t{color:var(--accent); font-family:Menlo,monospace;}
   body.withnotes section.slide{padding-bottom:34vh; justify-content:flex-start; padding-top:6vh;}
-  .help{position:fixed; left:1.2vw; bottom:1.2vh; color:#3a4354; font-size:0.8vw; z-index:30;}
+  .help{position:fixed; left:1.2vw; bottom:1.2vh; color:#aab1bc; font-size:0.8vw; z-index:30;}
+  @media print{
+    @page{size:1280px 720px; margin:0;}
+    html,body{height:auto;}
+    .deck{height:auto; overflow:visible;}
+    section.slide{display:flex; position:relative; inset:auto; height:720px;
+      page-break-after:always; padding:50px 90px;}
+    #bar,#hud,.help,#notes{display:none;}
+  }
 </style>
 </head>
 <body>
@@ -253,6 +263,7 @@
   var slides=[].slice.call(document.querySelectorAll('section.slide'));
   var notesBox=document.getElementById('notes');
   var posEl=document.getElementById('pos'), clockEl=document.getElementById('clock'), segEl=document.getElementById('seg');
+  var barEl=document.getElementById('bar');
   var i=0, t0=null, timerId=null;
   function parseSeg(s){ if(s==='—') return null; var p=s.split(':'); return (+p[0])*60+(+p[1]); }
   function fmt(s){ s=Math.floor(s); return Math.floor(s/60)+':'+('0'+(s%60)).slice(-2); }
@@ -260,6 +271,7 @@
     i=Math.max(0,Math.min(slides.length-1,k));
     slides.forEach(function(s,j){ s.classList.toggle('active', j===i); });
     posEl.textContent=(i+1)+' / '+slides.length;
+    barEl.style.width=((i+1)/slides.length*100)+'%';
     var seg=slides[i].dataset.seg;
     segEl.textContent='seg '+seg;
     var n=slides[i].querySelector('.notes');
