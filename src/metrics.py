@@ -5,16 +5,18 @@ from sklearn.metrics import (average_precision_score, balanced_accuracy_score,
 
 
 def scores_of(clf, X):
-    """连续决策分数：LR 用 predict_proba，LinearSVC 用 decision_function。"""
-    if hasattr(clf, "predict_proba"):
-        return clf.predict_proba(X)[:, 1]
+    """连续决策分数：LR 与 LinearSVC 统一用 decision_function。
+
+    这样 sign(score) 与 clf.predict 一致。不能用 predict_proba：
+    概率恒在 (0,1)，np.sign / s>0 会把所有样本判成正类，
+    在标签不平衡时产生 balanced_acc=0.5、risk≈正类比例 等退化假象。
+    """
     return clf.decision_function(X)
 
 
 def compute_metrics(y_true, y_score) -> dict:
     y_true = np.asarray(y_true)
-    y_pred = (np.asarray(y_score) > 0.5).astype(int) * 2 - 1 \
-        if set(np.unique(y_score)) <= {0.0, 1.0} else np.sign(y_score)
+    y_pred = np.sign(np.asarray(y_score, dtype=float))
     y_pred = np.where(y_pred == 0, 1, y_pred)
     out = {
         "balanced_acc": float(balanced_accuracy_score(y_true, y_pred)),

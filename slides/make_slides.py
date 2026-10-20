@@ -128,11 +128,13 @@ def build_midterm():
 
     s = add_slide(prs, "Challenges")
     add_bullets(s, [
+        (0, "首轮数据构造只取 chosen completion → 正类占 99.8%，指标退化"),
+        (1, "已修复为全部人工标注 completions 并重跑——本页数字均为 preliminary"),
         (0, "类别不平衡：对/错步骤比例悬殊 → 分层抽样 + balanced 指标"),
         (0, "泛化测试是复合分布偏移（题型 + 来源 + 标签方式同时变）→ 不作单因素归因"),
         (0, "预登记若被证伪（如 gap 峰值不在小样本端）→ 如实报告为边界结论"),
         (0, "拒答阈值（监视器何时说“不知道”）怎么定 → 风险-覆盖率曲线（可选 E5）"),
-    ], size=20)
+    ], size=19)
 
     s = add_slide(prs, "Plans")
     add_bullets(s, [

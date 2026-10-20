@@ -6,7 +6,10 @@
   "label": {"steps": [{"completions": [{"text": ..., "rating": +1/0/-1, ...}],
                         "chosen_completion": int | null, ...}], ...}
 }
-取每个 step 的 chosen completion；rating +1→correct, -1→incorrect, 0→neutral。
+取每个 step 的全部带 rating 的 completions（不能只取 chosen completion——
+chosen 几乎全是正类，会导致正类占比 ~99.8% 的标签退化）。
+rating +1→correct, -1→incorrect, 0→neutral；无 rating 的跳过。
+--max-per-step > 0 时截断每步 completions 数（保留全部负/中性例，正例按序截断）。
 若你的 HF 镜像 schema 不同，改成输出同 schema 的 csv 即可，下游无需改动。
 """
 import argparse
@@ -27,7 +30,7 @@ def iter_rows(path):
                 yield json.loads(line)
 
 
-def convert(paths, out):
+def convert(paths, out, max_per_step: int = 0):
     rows = []
     skipped = 0
     for path in paths:
@@ -35,21 +38,19 @@ def convert(paths, out):
             problem = ex["question"]["problem"]
             pid = problem_id_of(problem)
             for st in ex["label"]["steps"]:
-                ch = st.get("chosen_completion")
-                if ch is None:
-                    skipped += 1
-                    continue
-                comp = st["completions"][ch]
-                rating = comp.get("rating")
-                if rating not in RATING:
-                    skipped += 1
-                    continue
-                rows.append({
-                    "problem_id": pid,
-                    "problem_text": problem,
-                    "step_text": comp["text"],
-                    "label": LABEL_MAP[RATING[rating]],
-                })
+                comps = [c for c in st["completions"] if c.get("rating") in RATING]
+                skipped += len(st["completions"]) - len(comps)
+                if max_per_step > 0 and len(comps) > max_per_step:
+                    neg = [c for c in comps if c["rating"] <= 0]
+                    pos = [c for c in comps if c["rating"] > 0]
+                    comps = neg + pos[:max(0, max_per_step - len(neg))]
+                for comp in comps:
+                    rows.append({
+                        "problem_id": pid,
+                        "problem_text": problem,
+                        "step_text": comp["text"],
+                        "label": LABEL_MAP[RATING[comp["rating"]]],
+                    })
     df = pd.DataFrame(rows)
     df.to_csv(out, index=False)
     print(f"wrote {len(df)} steps ({df['problem_id'].nunique()} problems) "
@@ -60,5 +61,7 @@ if __name__ == "__main__":
     ap = argparse.ArgumentParser()
     ap.add_argument("--raw", nargs="+", required=True)
     ap.add_argument("--out", default="data/prm800k_steps.csv")
+    ap.add_argument("--max-per-step", type=int, default=0,
+                    help=">0 时每步最多保留 N 条 completions（负/中性例全保留）")
     a = ap.parse_args()
-    convert(a.raw, a.out)
+    convert(a.raw, a.out, a.max_per_step)
