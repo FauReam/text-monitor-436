@@ -1,7 +1,7 @@
 # 中期展示讲稿（5:00）— 逐页演讲词 + 技术解释
 
 > 配套文件：`slides/midterm_talk_5min.html`（按 N 键，本讲稿就在每页注释面板里）。
-> 总词量约 685 词，按 145 词/分钟 ≈ 4:43，留 15 秒余量。演讲词照念即可；技术解释是理解和 Q&A 用的，不用念。
+> 总词量约 690 词，按 150 词/分钟 ≈ 4:40，留 20 秒余量。演讲词全部是可照念的完整口语句（无标签冒号）；技术解释是理解和 Q&A 用的，不用念。
 
 | 页 | 内容 | 时段 | 累计 |
 |---|---|---|---|
@@ -20,7 +20,7 @@
 
 **演讲词（约 40 词）**
 
-"The value of pretrained features is regime-dependent: in-distribution, they do not help — when the dataset shifts, they do. We measured this on a cheap text monitor that judges math reasoning steps, as three curves: training size, distribution shift, and perturbation."
+"The value of pretrained features is regime-dependent. In-distribution, they do not help. When the dataset shifts, they do. We measured this on a cheap text monitor that judges math reasoning steps, through three curves — training size, distribution shift, and perturbation."
 
 **技术解释**
 
@@ -28,9 +28,9 @@ regime（制度）= 我们主动改变的实验条件轴：n（训练样本数�
 
 ## 第 2 页 · 内容冲刺（0:15–0:45）
 
-**演讲词（约 80 词）**
+**演讲词（约 90 词，语速稍快）**
 
-"Sixty seconds of everything required. Background: verifying LLM reasoning step-by-step is expensive, so we built a cheap text-only monitor — is this step correct? Setup: we measure delta — pretrained features minus TF-IDF — across three regimes; the only thing we vary is where the features come from. Data: PRM800K, nine hundred eleven thousand human-labeled steps, twenty-eight percent wrong, split grouped by problem. Methods: frozen embeddings, plus logistic regression and linear SVM from class, against TF-IDF. Metrics: balanced, ten seeds, test set touched once."
+"First, sixty seconds of everything required. Verifying a language model's reasoning step by step is expensive, so we built a cheap monitor that reads one math step and judges it right or wrong. We measure the gap between pretrained features and TF-IDF across three regimes, and the only thing we vary is where the features come from. The data is PRM800K — nine hundred eleven thousand human-labeled steps, twenty-eight percent wrong — split grouped by problem. The learners are frozen embeddings plus logistic regression and linear SVM, against TF-IDF. Every metric is balanced, over ten seeds, test set touched once."
 
 **技术解释**
 
@@ -38,19 +38,19 @@ regime（制度）= 我们主动改变的实验条件轴：n（训练样本数�
 
 ## 第 3 页 · 得分点清单（0:45–1:15）
 
-**演讲词（约 70 词）**
+**演讲词（约 60 词）**
 
-"And the scorecard. Soundness: a leakage-free grouped split, balanced metrics, ten-seed intervals, hyperparameters chosen inside train only. Organization: checklist first, one story after. Clarity: every conclusion is a gap with an interval, never a bare number. Progress: four experiments complete on clean data. Challenges: we shipped one bug, caught it, and re-ran everything. Checklist done — now the number behind the headline."
+"And our scorecard. For soundness, a leakage-free grouped split, balanced metrics, ten-seed intervals, hyperparameters chosen inside train only. For clarity, every conclusion is a gap with an interval, never a bare number. We have four experiments complete on clean data — and we shipped one bug, caught it, and re-ran everything. Checklist done. Now the number behind the headline."
 
 **技术解释**
 
-这页是元信息：五个评分项各一句证据，评委直接对号入座，每条 4–5 秒匀速过。takeaway（"Checklist done…"）放慢加重，停一拍再翻页——全场唯一一次"推销"。若被问为什么这样组织：先证明覆盖度，再把 3 分钟投给信息量最大的部分（负结果+消融），而不是平均分配。
+这页是元信息：五个评分项评委直接对号入座（屏上五行就是证据），口播只需点其中两三个，不用逐条念。takeaway（"Checklist done…"）放慢加重，停一拍再翻页——全场唯一一次"推销"。若被问为什么这样组织：先证明覆盖度，再把 3 分钟投给信息量最大的部分（负结果+消融），而不是平均分配。
 
 ## 第 4 页 · Δ(n) 丑曲线（1:15–2:30，全场最慢）
 
-**演讲词（约 165 词）**
+**演讲词（约 145 词）**
 
-"Here is the honest curve. The textbook expectation: pretrained features should help most when training data is scarce — the sample-efficiency story. What we measured is the opposite. At n equals twenty, everything sits at zero point five one — near random — for every feature; there is no signal to harvest. From fifty on, the gap — embedding minus TF-IDF — turns negative and stays negative, monotone, ten seeds out of ten. At full data, TF-IDF beats every embedding by five AUROC points or more, and the ninety-five percent interval excludes zero. Read the gap, not the levels. This is not a failed experiment — it localizes where pretrained features do not pay: in-distribution, with abundant data, on a narrow task."
+"Here is the honest curve. The textbook says pretrained features should help most when training data is scarce — that is the sample-efficiency story. What we measured is the opposite. At n equals twenty, everything sits at zero point five one, near random, for every feature — there is simply no signal to harvest. From fifty on, the gap between embedding and TF-IDF turns negative and stays negative, monotone, ten seeds out of ten. And at full data, TF-IDF beats every embedding by five AUROC points or more, with a ninety-five percent interval that excludes zero. So read the gap, not the levels. This is not a failed experiment — it localizes where pretrained features do not pay, and that is in-distribution, with abundant data, on a narrow task."
 
 **技术解释**
 
@@ -58,9 +58,9 @@ regime（制度）= 我们主动改变的实验条件轴：n（训练样本数�
 
 ## 第 5 页 · 解剖 + 处理（2:30–3:20）
 
-**演讲词（约 125 词）**
+**演讲词（约 130 词）**
 
-"Why does the baseline win? Three reasons. This is one narrow domain — the signal lives in tokens like 'therefore', equals signs, LaTeX fragments — and similarity-trained embeddings blur exactly those tokens. Second: with six hundred thirty-two thousand training steps, sparse features are not starving; small data is not this task's bottleneck. Third: embeddings were pretrained for meaning, not for correctness — an objective mismatch. And why do we trust the result? Because the two wrong-looking numbers on the way here were handled. The first was our fault: our label construction kept only chosen completions — ninety-nine point eight percent positive. The metrics degenerated, we caught it, and re-ran everything. The second — the negative gap — survived every check we could throw at it."
+"Why does the baseline win here? Three reasons. This is one narrow domain, and the signal lives in tokens like 'therefore', equals signs, LaTeX fragments — similarity-trained embeddings blur exactly those tokens. Second, with six hundred thirty-two thousand training steps, sparse features are not starving; small data is not this task's bottleneck. And third, embeddings were pretrained for meaning, not for correctness — an objective mismatch. Why do we trust this result? Because the two wrong-looking numbers on the way here were both handled. The first was our fault — our label construction kept only chosen completions, ninety-nine point eight percent positive. The metrics degenerated, we caught it, and re-ran everything. The second one, the negative gap, survived every check we could throw at it."
 
 **技术解释**
 
@@ -68,9 +68,9 @@ regime（制度）= 我们主动改变的实验条件轴：n（训练样本数�
 
 ## 第 6 页 · 消融反转（3:20–4:20，全场高潮）
 
-**演讲词（约 145 词）**
+**演讲词（约 150 词）**
 
-"Now the turn. We change the regime — train on MATH, test on GSM8K — and the sign flips. bge-large beats TF-IDF by plus zero point zero two zero, with a tight interval. bge-base is plus zero point zero zero six. MiniLM is nothing. A clean size gradient — not a fluke. The mechanism is in the overfitting numbers: TF-IDF's train-test gap is three times larger — it wins in-domain by memorizing surface tokens, and memorization does not travel. Perturbations: both degrade less than zero point zero zero seven — parity, we claim nothing there. Selective prediction: TF-IDF is still marginally better — reported as-is. So the refined thesis: pretrained features are not most valuable when data is scarce — they are most valuable when the distribution drifts."
+"Now the turn. We change the regime — we train on MATH and test on GSM8K — and the sign flips. bge-large beats TF-IDF by plus zero point zero two zero, with a tight interval. bge-base is plus zero point zero zero six, and MiniLM is nothing. That is a clean size gradient, not a fluke. The mechanism shows up in the overfitting numbers — TF-IDF's train-test gap is three times larger. It wins in-domain by memorizing surface tokens, and memorization does not travel. Under perturbations, both degrade less than zero point zero zero seven — that is parity, and we claim nothing there. And selective prediction still slightly favors TF-IDF; we report it as-is. So the refined thesis is that pretrained features are not most valuable when data is scarce — they are most valuable when the distribution drifts."
 
 **技术解释**
 
@@ -78,13 +78,13 @@ paired bootstrap（测试集内 1000 次重抽样）：bge-large Δ=+0.020 CI[0.
 
 ## 第 7 页 · 计划 + 收尾（4:20–4:45）
 
-**演讲词（约 65 词）**
+**演讲词（约 70 词）**
 
-"For the final: we have started E6 — predicting the downstream gap from properties of the representation itself; correlation zero point nine on four points, preliminary. We widen the shift grid to map exactly where the sign flips. The deliverable is three delta curves, written as a measurement report. We asked whether pretrained representations help. The answer is not yes or no — it is a map. We drew the first three coordinates. Thank you."
+"For the final, we have started E6, predicting the downstream gap from representation properties — the correlation is zero point nine on four points, still preliminary. We will widen the shift grid to map where the sign flips, and deliver three delta curves as a measurement report. We asked whether pretrained representations help. The answer is not yes or no — it is a map, and we drew the first three coordinates. Thank you."
 
 **技术解释**
 
-E6：用廉价可算的表征统计量（训练集散度等）预测实测 Δ——Spearman ρ=0.900、p=0.037 但 n=4 点，必须带 preliminary；被问就说点数少、期末扩"表征×制度"网格。期末交付：Δ(n)、Δ(偏移)、Δ(扰动) 三条曲线+摘要效应量的测量报告。若被问 AUROC 绝对值为何不高：步级对错本身难，我们报的是特征来源间的 Δ 而非绝对水平。理想节奏 4:45 讲完，留 15 秒余量。
+E6：用廉价可算的表征统计量（训练集散度等）预测实测 Δ——Spearman ρ=0.900、p=0.037 但 n=4 点，必须带 preliminary；被问就说点数少、期末扩"表征×制度"网格。期末交付：Δ(n)、Δ(偏移)、Δ(扰动) 三条曲线+摘要效应量的测量报告。若被问 AUROC 绝对值为何不高：步级对错本身难，我们报的是特征来源间的 Δ 而非绝对水平。理想节奏 4:45 讲完，留余量。
 
 ## 第 8 页 · backup（不计时）
 
