@@ -42,3 +42,61 @@ def bootstrap_ci(y_true, y_score, n_boot: int = 1000, seed: int = 0,
         m = compute_metrics(y_true[idx], y_score[idx])
         vals.append(m[metric])
     return [float(np.percentile(vals, 2.5)), float(np.percentile(vals, 97.5))]
+
+
+def paired_problem_bootstrap(y_true, scores, groups, baselines,
+                             n_boot=1000, seed=0):
+    """整题有放回重采样，所有方法共享同一组题目权重。
+
+    估计的是步骤加权 AUROC 差的不确定性，条件于当前固定训练模型；
+    不包含训练抽样随机性，也不将探索性测试变成独立确认。
+    使用组出现次数作为每行 sample_weight，等价于复制该题所有步骤。
+    """
+    y = np.asarray(y_true)
+    groups = np.asarray(groups)
+    scores = {name: np.asarray(s, dtype=float) for name, s in scores.items()}
+    if y.ndim != 1 or groups.ndim != 1 or len(y) != len(groups):
+        raise ValueError("Labels and groups must be aligned one-dimensional arrays.")
+    if not scores or not baselines or n_boot < 2:
+        raise ValueError("Provide scores, baselines and at least two bootstrap draws.")
+    if any(s.shape != y.shape or not np.isfinite(s).all() for s in scores.values()):
+        raise ValueError("Every score vector must be finite and aligned with labels.")
+    if len(np.unique(y)) != 2:
+        raise ValueError("Binary labels with both classes are required.")
+    if any(b not in scores for b in baselines):
+        raise ValueError("Every baseline must have a score vector.")
+    unique, inverse = np.unique(groups, return_inverse=True)
+    if len(unique) < 2:
+        raise ValueError("At least two independent problem groups are required.")
+    pairs = [(method, baseline) for baseline in baselines
+             for method in scores if method not in baselines]
+    if not pairs:
+        raise ValueError("Provide at least one non-baseline method.")
+    point = {name: float(roc_auc_score(y, s)) for name, s in scores.items()}
+    draws = {pair: [] for pair in pairs}
+    rng = np.random.RandomState(seed)
+    valid = 0
+    for _ in range(n_boot * 20):
+        sampled = rng.randint(len(unique), size=len(unique))
+        counts = np.bincount(sampled, minlength=len(unique))
+        weights = counts[inverse]
+        if len(np.unique(y[weights > 0])) < 2:
+            continue
+        aucs = {name: roc_auc_score(y, s, sample_weight=weights)
+                for name, s in scores.items()}
+        for pair in pairs:
+            draws[pair].append(aucs[pair[0]] - aucs[pair[1]])
+        valid += 1
+        if valid == n_boot:
+            break
+    if valid != n_boot:
+        raise ValueError("Not enough two-class bootstrap draws; inspect group/label structure.")
+    return {
+        "unit": "problem_id", "n_problems": len(unique), "n_steps": len(y),
+        "n_boot": valid, "seed": seed, "auroc": point,
+        "uncertainty": "conditional_on_fixed_training; step-weighted AUROC",
+        "comparisons": {f"{m} - {b}": {
+            "delta": point[m] - point[b],
+            "ci95": np.percentile(draws[(m, b)], [2.5, 97.5]).tolist(),
+        } for m, b in pairs},
+    }

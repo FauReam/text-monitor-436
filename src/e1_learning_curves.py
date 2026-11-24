@@ -10,7 +10,7 @@ import numpy as np
 
 from data import group_split, input_texts, load_sst2, load_steps, subsample_stratified
 from features import FEATURES, Featurizer
-from protocol import fit_and_eval
+from protocol import PROTOCOL_VERSION, fit_and_eval
 from utils import save_json, set_seed
 
 N_LIST = [20, 50, 100, 500, 2000, None]  # None = 全量
@@ -47,7 +47,7 @@ def main():
 
     df = load_sst2() if a.dataset == "sst2" else load_steps(a.dataset)
     train_df, val_df, test_df = group_split(df, seed=a.seed)
-    trainval = train_df  # val 合并进 train，由分组 CV 内部选 C
+    trainval = train_df  # 保留 val；仅在 train 内部做分组 CV
     print(f"train={len(trainval)} test={len(test_df)} "
           f"problems(train)={trainval['problem_id'].nunique()}")
 
@@ -90,6 +90,8 @@ def main():
                 results[feat][clf_name][key] = runs
 
     save_json({"dataset": a.dataset, "seed": a.seed, "n_seeds": a.n_seeds,
+               "input_mode": a.input_mode, "protocol_version": PROTOCOL_VERSION,
+               "status": "corrected_protocol_same_exploratory_holdout",
                "results": results},
               f"e1_learning_curves_{a.dataset}{a.out_suffix}.json")
     print("saved results/e1_learning_curves_%s%s.json" % (a.dataset, a.out_suffix))
