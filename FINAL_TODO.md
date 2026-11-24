@@ -11,10 +11,10 @@
 
 ## P0：确认环境并验证代码
 
-- [ ] 拉取本次提交，记录 commit SHA、Python/依赖版本、硬件、运行命令和随机种子。
-- [ ] 确认 `data/prm800k_steps.csv`、`data/mathshepherd_steps.csv` 和原有特征缓存可用；记录数据来源和指纹。
-- [ ] 检查按题目分组的 train/val/test 隔离，以及迁移数据与训练题目的重合；有重合先记录并解决，不静默继续。
-- [ ] 运行以下检查。缺数据或单类别交叉验证折时应停止并报告原因，不跳过失败后继续汇总。
+- [x] 拉取本次提交，记录 commit SHA、Python/依赖版本、硬件、运行命令和随机种子。（记录于 RUN_LOG.md；执行 commit `a569307`）
+- [x] 确认 `data/prm800k_steps.csv`、`data/mathshepherd_steps.csv` 和原有特征缓存可用；记录数据来源和指纹。（md5 指纹记录于 RUN_LOG.md；**原特征缓存在机器维护中丢失，已按同一冻结模型全量重建**——逐文本缓存为内容寻址 md5(model+text)，重建与原始等价；拟合缓存键含协议版本，旧协议不复用）
+- [x] 检查按题目分组的 train/val/test 隔离，以及迁移数据与训练题目的重合；有重合先记录并解决，不静默继续。（train/val/test 题组两两交集 = 0；迁移集与 train/test 的 problem_id 与题目文本交集均 = 0，记录于 RUN_LOG.md）
+- [x] 运行以下检查。缺数据或单类别交叉验证折时应停止并报告原因，不跳过失败后继续汇总。（`tests/test_final_protocol.py` 4 项全过；`py_compile` 通过）
 
 ```bash
 python3 tests/test_final_protocol.py
@@ -28,8 +28,8 @@ python3 -m py_compile src/protocol.py src/metrics.py src/final_validation.py src
 
 ### 1. 两种输入的全量评估与按题目置信区间
 
-- [ ] 两种输入都使用修正后的同一协议；同时保留 word/char TF-IDF 基线。
-- [ ] 在同分布和迁移数据上，报告各方法 AUROC，以及相对两个基线的配对差值和题目级 95% 区间。
+- [~] 两种输入都使用修正后的同一协议；同时保留 word/char TF-IDF 基线。（进行中：**step 模式已完成**（`results/final_v3_step.json` + 双 NPZ）；joint 模式待 TF-IDF char 全量拟合收尾后运行）
+- [ ] 在同分布和迁移数据上，报告各方法 AUROC，以及相对两个基线的配对差值和题目级 95% 区间。（step 模式已报告：同分布 bge-large−word = +0.0038 CI 跨 0（追平）；迁移 +0.0690 CI[+0.063,+0.074] 显著。joint 待跑）
 
 ```bash
 python3 src/final_validation.py --input-mode step --out results/final_v3_step.json
@@ -42,7 +42,7 @@ python3 src/final_validation.py --input-mode problem+step --out results/final_v3
 
 ### 2. 补 step-only 小样本曲线，并重跑对应原输入对照
 
-- [ ] 优先跑 word、char、BGE-large，SVM；每个 n=20/50/100/500/2000 用相同 10 个种子；全量各一次拟合。
+- [~] 优先跑 word、char、BGE-large，SVM；每个 n=20/50/100/500/2000 用相同 10 个种子；全量各一次拟合。（进行中：**step 模式已完成并合并**（`results/e1_learning_curves_prm800k_final_v3_step.json`）；joint 的 bge 已完成（`*_final_v3_joint_bge.json`），joint 的 tfidf 待 char 全量拟合收尾后合并。执行时按特征分片（`_tfidf`/`_bge` 后缀）跑出再合并——子抽样只依赖 (n, seed)，跨特征一致）
 
 ```bash
 python3 src/e1_learning_curves.py --input-mode step --features tfidf-word tfidf-char st-bge-large-en-v1.5 --classifiers svm --n-seeds 10 --full-seeds 1 --out-suffix _final_v3_step

@@ -1,0 +1,137 @@
+{
+  "protocol_version": "foldwise-tfidf-v3",
+  "input_mode": "step",
+  "classifier": "svm",
+  "seed": 0,
+  "selected_C": {
+    "tfidf-word": 0.1,
+    "tfidf-char": 0.1,
+    "st-all-MiniLM-L6-v2": 0.1,
+    "st-bge-base-en-v1.5": 0.1,
+    "st-bge-large-en-v1.5": 0.1
+  },
+  "status": "corrected_protocol_same_exploratory_holdouts",
+  "note": "Problem bootstrap conditions on fixed fitted models; no claim of prospective confirmation.",
+  "splits": {
+    "in_domain": {
+      "unit": "problem_id",
+      "n_problems": 2165,
+      "n_steps": 190573,
+      "n_boot": 1000,
+      "seed": 0,
+      "auroc": {
+        "tfidf-word": 0.7076511335925822,
+        "tfidf-char": 0.7037025683256369,
+        "st-all-MiniLM-L6-v2": 0.6809783920262049,
+        "st-bge-base-en-v1.5": 0.7036513029554208,
+        "st-bge-large-en-v1.5": 0.7114124850650383
+      },
+      "uncertainty": "conditional_on_fixed_training; step-weighted AUROC",
+      "comparisons": {
+        "st-all-MiniLM-L6-v2 - tfidf-word": {
+          "delta": -0.026672741566377334,
+          "ci95": [
+            -0.04087012218019699,
+            -0.01158434566727599
+          ]
+        },
+        "st-bge-base-en-v1.5 - tfidf-word": {
+          "delta": -0.003999830637161472,
+          "ci95": [
+            -0.016731226102729035,
+            0.009951614840922655
+          ]
+        },
+        "st-bge-large-en-v1.5 - tfidf-word": {
+          "delta": 0.0037613514724560426,
+          "ci95": [
+            -0.007101361628660582,
+            0.014679544110048856
+          ]
+        },
+        "st-all-MiniLM-L6-v2 - tfidf-char": {
+          "delta": -0.02272417629943202,
+          "ci95": [
+            -0.036963533987489666,
+            -0.006888922818875003
+          ]
+        },
+        "st-bge-base-en-v1.5 - tfidf-char": {
+          "delta": -5.126537021615807e-05,
+          "ci95": [
+            -0.012962496276167801,
+            0.01377638813138275
+          ]
+        },
+        "st-bge-large-en-v1.5 - tfidf-char": {
+          "delta": 0.007709916739401357,
+          "ci95": [
+            -0.00015967432524353618,
+            0.015830844931659697
+          ]
+        }
+      },
+      "scores_file": "results/final_v3_step_in_domain_scores.npz"
+    },
+    "transfer": {
+      "unit": "problem_id",
+      "n_problems": 7508,
+      "n_steps": 613666,
+      "n_boot": 1000,
+      "seed": 0,
+      "auroc": {
+        "tfidf-word": 0.5264529347014731,
+        "tfidf-char": 0.5585103608509153,
+        "st-all-MiniLM-L6-v2": 0.5568550814842799,
+        "st-bge-base-en-v1.5": 0.5757708274022586,
+        "st-bge-large-en-v1.5": 0.595433046205621
+      },
+      "uncertainty": "conditional_on_fixed_training; step-weighted AUROC",
+      "comparisons": {
+        "st-all-MiniLM-L6-v2 - tfidf-word": {
+          "delta": 0.030402146782806727,
+          "ci95": [
+            0.024171298142627303,
+            0.03710757721444884
+          ]
+        },
+        "st-bge-base-en-v1.5 - tfidf-word": {
+          "delta": 0.04931789270078546,
+          "ci95": [
+            0.0430431316664671,
+            0.0549789432847347
+          ]
+        },
+        "st-bge-large-en-v1.5 - tfidf-word": {
+          "delta": 0.06898011150414785,
+          "ci95": [
+            0.06318306134660216,
+            0.074331719945213
+          ]
+        },
+        "st-all-MiniLM-L6-v2 - tfidf-char": {
+          "delta": -0.0016552793666354537,
+          "ci95": [
+            -0.007867129022150402,
+            0.005082422088303136
+          ]
+        },
+        "st-bge-base-en-v1.5 - tfidf-char": {
+          "delta": 0.01726046655134328,
+          "ci95": [
+            0.01151226492798113,
+            0.023254371781945178
+          ]
+        },
+        "st-bge-large-en-v1.5 - tfidf-char": {
+          "delta": 0.036922685354705664,
+          "ci95": [
+            0.031017613594111787,
+            0.042881945191395404
+          ]
+        }
+      },
+      "scores_file": "results/final_v3_step_transfer_scores.npz"
+    }
+  }
+}

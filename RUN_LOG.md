@@ -39,3 +39,32 @@
   拟合缓存键含协议版本与数据哈希，旧协议缓存不会复用。
 - 编码缓存改两级分片存储（data/cache/ab/hash.npy）：旧扁平目录曾写满 ext4 目录索引
   导致 ENOSPC，详见 commit 9347b9a。
+
+## 2026-11-25 · P1 阶段产出（部分完成）
+
+### 已完成
+
+- **全量预编码**：3 模型 × 3,089,020 unique 文本全部入缓存（11h，GPU 串行）
+- **E1 学习曲线（新协议，SVM，10 种子 + 全量点）**
+  - `results/e1_learning_curves_prm800k_final_v3_step.json`（已合并 tfidf/bge 分片：
+    tfidf-word、tfidf-char、bge-large 三特征齐全）
+  - step 模式全量点：tfidf-word 0.7077 / tfidf-char 0.7037 / bge-large 0.7114
+  - 关键读数：bge-large(step) 在 n=20…2000 每个点都高于 tfidf-word(step)
+    （0.53/0.56/0.56/0.63/0.66 vs 0.51/0.53/0.55/0.60/0.63）
+  - 分片文件：`*_final_v3_step_tfidf.json`、`*_final_v3_step_bge.json`、
+    `*_final_v3_joint_bge.json`（joint tfidf 的 char 全量拟合仍在跑）
+- **final_validation（step 模式）**：`results/final_v3_step.json`
+  （protocol_version=foldwise-tfidf-v3，unit=problem_id，配对 bootstrap 1000 次）
+  - 同分布：bge-large − tfidf-word = +0.0038，CI[−0.0071, +0.0147] **跨 0（追平）**；
+    − tfidf-char = +0.0077，CI[−0.0002, +0.0158] 临界
+  - 迁移：bge-large − tfidf-word = **+0.0690，CI[+0.063, +0.074] 显著**；
+    − tfidf-char = +0.0369 显著；MiniLM vs char = −0.0017 跨 0（不能概括为全部更好）
+  - 分数 NPZ（按 FINAL_TODO 只记录位置与校验值，不入 git）：
+    - `results/final_v3_step_in_domain_scores.npz`（5.9MB）md5 `88f7516f1e1bdfaf32d8269e84ee3af0`
+    - `results/final_v3_step_transfer_scores.npz`（25MB）md5 `04535fc5a62560807db6b8c4629e491c`
+
+### 进行中
+
+- TF-IDF joint 的 char 全量拟合（最后一个训练任务）→ 完成后跑
+  `final_validation --input-mode problem+step --out results/final_v3_joint.json`，
+  并合并 joint 曲线 JSON

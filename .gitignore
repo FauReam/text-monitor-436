@@ -5,3 +5,6 @@ __pycache__/
 *.npy
 *.joblib
 .DS_Store
+
+# final_v3 分数 NPZ 体量大，按 FINAL_TODO 只记录位置与校验值
+results/*.npz
