@@ -1,6 +1,7 @@
 """预编码工具：把全部实验所需的文本一次性写入 embedding 缓存（data/cache/）。
 
-覆盖：E1/E2/E5/E6 的 train+test、E3 迁移测试集、E4 的四种扰动测试集。
+覆盖：E1/E2/E5/E6 的 train+test、E3 迁移测试集（主设定 + step-only）、
+E4 的四种扰动测试集、E7 输入消融的 step+problem / step 两种构造。
 
 用法（逐模型串行；同一 GPU 上多进程编码会严重互相拖慢，勿并行）：
     for m in st-all-MiniLM-L6-v2 st-bge-base-en-v1.5 st-bge-large-en-v1.5; do
@@ -20,11 +21,15 @@ from utils import set_seed
 
 
 def all_texts(seed: int = 0):
-    """E1–E6 全部待编码文本（与各脚本里的构造方式严格一致）。"""
+    """E1–E7 全部待编码文本（与各脚本里的构造方式严格一致）。"""
     df = load_steps("prm800k")
     train_df, _, test_df = group_split(df, seed=seed)
-    texts = list(input_texts(train_df)) + list(input_texts(test_df))
-    texts += list(input_texts(load_steps("mathshepherd")))
+    # 主设定 + E7 消融的两种输入构造
+    texts = []
+    for mode in ("problem+step", "step+problem", "step"):
+        texts += list(input_texts(train_df, mode)) + list(input_texts(test_df, mode))
+    texts += list(input_texts(load_steps("mathshepherd")))          # E3 迁移（主设定）
+    texts += list(input_texts(load_steps("mathshepherd"), "step"))  # E3 step-only 消融
     for pname, pfun in PERTURBATIONS.items():
         if pname == "none":
             continue
